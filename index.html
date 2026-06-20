@@ -244,7 +244,7 @@
     <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
 
     <script>
-        const apiKey = ""; // Environment provided fallback
+        const apiKey = "AQ.Ab8RN6JxYziMKDzXco_yPTUZO9Wth8bJx1GHY5JKNZFKNPx19w"; // Environment provided fallback
         const MAX_STRIP_HEIGHT = 2000; 
         const MAX_WIDTH = 1200; 
         let queue = [];
@@ -638,36 +638,37 @@
             const currentGlossary = el.glossaryArea.value.trim();
             const glossaryInstruction = currentGlossary ? `\nMANDATORY GLOSSARY:\n${currentGlossary}` : "";
 
-            const systemPrompt = `You are an elite, professional Manga Localizer translating from English to Myanmar (Burmese) with a focus on ZERO MISTAKES.
-            1. You will receive a JSON array of English dialogue bubbles representing a continuous story.
-            2. Translate into natural, emotionally resonant Myanmar dialogue. Adapt slang/idioms appropriately. Do NOT use overly formal or robotic machine translation.
-            3. Ensure absolutely perfect spelling, grammar, and context in Myanmar. Do not hallucinate, make up context, or omit any meaning.
-            4. You MUST return a JSON object with 'translatedBubbles' (array) and 'newTerms' (string).
-            5. The 'translatedBubbles' array MUST have the exact same length as the input array. Map strictly 1-to-1 without combining bubbles.
-            6. Skip SFX. If input is purely SFX, translate it as an empty string "".${glossaryInstruction}`;
+            const systemPrompt = You are a professional Manga Localizer.
+                1. Translate the English dialogue into natural Myanmar (Burmese).
+                2. For each bubble, you MUST detect the exact bounding box coordinates (x, y, width, height) based on the image provided.
+                3. You must return the response in JSON format only with these specific keys:
+                       - "translatedBubbles": [Array of Burmese text strings]
+                       - "coordinates": [Array of objects: {"x": number, "y": number, "width": number, "height": number}]
+                       - "newTerms": "string"
+                4. Do not include any text outside the JSON structure.;
+
+
+            
 
             const payload = {
-                contents: [{ parts: [{ text: JSON.stringify(inputArray) }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ 
+                    parts: [{ text: JSON.stringify(inputArray) }] 
+                }],
+                systemInstruction: { 
+                    parts: [{ text: You are a professional Manga Localizer. 
+                        1. Translate the English dialogue into natural Myanmar (Burmese). 
+                        2. For each bubble, you MUST detect the exact bounding box coordinates (x, y, width, height) based on the image provided.
+                        3. You must return the response in JSON format ONLY with the following keys:
+                           - "translatedBubbles": [Array of translated Myanmar text strings]
+                           - "coordinates": [Array of objects: {"x": number, "y": number, "width": number, "height": number}]
+                           - "newTerms": "string"
+                        4. Do not include any text outside the JSON structure. 
+                    }] 
+                },
                 generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            translatedBubbles: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            },
-                            newTerms: {
-                                type: "STRING",
-                                description: "List new character names/terms as 'English = Myanmar' separated by newlines. If none, write 'NONE'."
-                            }
-                        },
-                        required: ["translatedBubbles", "newTerms"]
-                    }
+                    responseMimeType: "application/json"
                 }
             };
-
             const data = await fetchWithBackoff(model, payload);
             const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             let parsedResult = {};
