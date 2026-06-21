@@ -144,7 +144,7 @@
         
         <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-4 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
             
-            <!-- FIXED: Native label element automatically forces window upload trigger without bugging event loops -->
+            <!-- Clicking this box now triggers the file selector perfectly -->
             <label id="dropZone" for="fileInput" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
                 <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors select-none"><span class="text-red-600">></span> upload_images.sh</p>
             </label>
@@ -177,7 +177,6 @@
                 </button>
             </div>
 
-            <!-- RESTORED: Matches your exact layout specifications for models -->
             <div class="pt-2 shrink-0">
                 <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL (PRO NEEDS CUSTOM KEY)</label>
                 <select id="modelSelect" class="w-full p-2 text-[10px] lg:text-xs">
@@ -186,10 +185,9 @@
                 </select>
             </div>
 
-            <!-- RESTORED: Custom environment target configuration -->
             <div class="pt-2 shrink-0">
                 <label class="block text-[9px] uppercase text-zinc-500 mb-1">ENV_VAR: GEMINI_API_KEY</label>
-                <input type="password" id="apiKeyInput" class="w-full p-2 text-[10px] lg:text-xs" placeholder="[Environment Provided]">
+                <input type="password" id="apiKeyInput" class="w-full p-2 text-[10px] lg:text-xs" placeholder="AIZAsy...">
             </div>
 
             <div class="mt-2 shrink-0 border border-zinc-800 p-2 bg-[#0a0a0a]">
@@ -245,7 +243,7 @@
                 <div class="loader"></div>
                 <div class="text-center font-mono">
                     <p id="progressText" class="text-red-500 text-[10px] lg:text-sm">EXECUTING</p>
-                    <p id="chunkText" class="text-[8px] lg:text-[10px] text-zinc-500 mt-1">> Establishing secure connection...</p>
+                    <p id="chunkText" class="text-[8px] lg:text-[10px] text-zinc-500 mt-1">> Establishing connection...</p>
                 </div>
             </div>
         </section>
@@ -254,8 +252,8 @@
     <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
 
     <script>
-        const MAX_STRIP_HEIGHT = 2000; 
-        const MAX_WIDTH = 1200; 
+        const MAX_STRIP_HEIGHT = 1800; 
+        const MAX_WIDTH = 1000; 
         let queue = [];
         let isProcessing = false;
         let speechBubbleCoordinates = []; 
@@ -291,50 +289,48 @@
             rpmBar: document.getElementById('rpmBar')
         };
 
+        // Sidebar Toggle
         el.toggleSidebar.onclick = () => {
-            if (el.sidebar.classList.contains('hidden')) {
-                el.sidebar.classList.remove('hidden');
-                el.sidebar.classList.add('flex');
-            } else {
-                el.sidebar.classList.add('hidden');
-                el.sidebar.classList.remove('flex');
-            }
+            el.sidebar.classList.toggle('hidden');
+            if(!el.sidebar.classList.contains('hidden')) el.sidebar.classList.add('flex');
         };
 
+        // Cache Management
         el.glossaryArea.value = localStorage.getItem('sundayComicGlossary') || '';
         el.glossaryArea.addEventListener('input', (e) => localStorage.setItem('sundayComicGlossary', e.target.value));
         
-        if (localStorage.getItem('sundayComicModel')) {
-            el.modelSelect.value = localStorage.getItem('sundayComicModel');
-        }
+        if (localStorage.getItem('sundayComicModel')) el.modelSelect.value = localStorage.getItem('sundayComicModel');
         el.modelSelect.addEventListener('change', (e) => localStorage.setItem('sundayComicModel', e.target.value));
 
-        if (localStorage.getItem('sundayApiKey')) {
-            el.apiKeyInput.value = localStorage.getItem('sundayApiKey');
-        }
+        if (localStorage.getItem('sundayApiKey')) el.apiKeyInput.value = localStorage.getItem('sundayApiKey');
         el.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('sundayApiKey', e.target.value));
 
         el.resultArea.value = localStorage.getItem('sundayComicRawText') || '';
         el.translationArea.value = localStorage.getItem('sundayComicTransText') || '';
-        if(el.resultArea.value.trim().length > 0) el.translateBtn.disabled = false;
-        if(el.translationArea.value.trim().length > 0) el.typesetBtn.disabled = false;
+        updateButtonStates();
         
         el.resultArea.addEventListener('input', (e) => {
             localStorage.setItem('sundayComicRawText', e.target.value);
-            el.translateBtn.disabled = e.target.value.trim() === '';
+            updateButtonStates();
         });
         el.translationArea.addEventListener('input', (e) => {
             localStorage.setItem('sundayComicTransText', e.target.value);
-            el.typesetBtn.disabled = e.target.value.trim() === '';
+            updateButtonStates();
         });
 
+        function updateButtonStates() {
+            el.startBtn.disabled = isProcessing || queue.length === 0;
+            el.translateBtn.disabled = isProcessing || el.resultArea.value.trim() === '';
+            el.typesetBtn.disabled = isProcessing || el.translationArea.value.trim() === '' || queue.length === 0;
+        }
+
+        // Tab views
         el.tabImg.onclick = () => {
             el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
             el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
             el.resultArea.classList.add('hidden');
             el.imageViewer.classList.remove('hidden');
             el.copyBtn.classList.add('hidden'); 
-            renderImageViewer();
         };
         el.tabRaw.onclick = () => {
             el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
@@ -344,28 +340,16 @@
             el.copyBtn.classList.remove('hidden'); 
         };
 
-        // FIXED UPLOAD ENGINE: Supports drag-drop tracking and automatic file matching setups
+        // File loading core
         el.fileInput.onchange = (e) => {
-            if (e.target.files.length > 0) {
-                addFiles(Array.from(e.target.files));
-            }
+            if (e.target.files.length > 0) addFiles(Array.from(e.target.files));
         };
-
-        el.dropZone.ondragover = (e) => {
-            e.preventDefault();
-            el.dropZone.style.borderColor = "#dc2626";
-        };
-
-        el.dropZone.ondragleave = () => {
-            el.dropZone.style.borderColor = "";
-        };
-
+        el.dropZone.ondragover = (e) => { e.preventDefault(); el.dropZone.style.borderColor = "#dc2626"; };
+        el.dropZone.ondragleave = () => { el.dropZone.style.borderColor = ""; };
         el.dropZone.ondrop = (e) => {
             e.preventDefault();
             el.dropZone.style.borderColor = "";
-            if (e.dataTransfer.files.length > 0) {
-                addFiles(Array.from(e.dataTransfer.files));
-            }
+            if (e.dataTransfer.files.length > 0) addFiles(Array.from(e.dataTransfer.files));
         };
         
         el.clearAll.onclick = () => { 
@@ -377,10 +361,9 @@
             el.translationArea.value = ""; 
             localStorage.removeItem('sundayComicRawText');
             localStorage.removeItem('sundayComicTransText');
-            el.translateBtn.disabled = true; 
-            el.typesetBtn.disabled = true;
+            updateButtonStates();
             renderImageViewer();
-            showToast("[System] Workspace memory wiped.");
+            showToast("[System] Workspace cleared.");
         };
 
         function addFiles(files) {
@@ -395,13 +378,12 @@
             queue = [...queue, ...newItems].sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true, sensitivity: 'base' }));
             renderQueue();
             renderImageViewer();
-            showToast(`[System] ${files.length} payload(s) loaded.`);
-            if(window.innerWidth < 1024) el.sidebar.classList.add('hidden');
+            showToast(`[System] ${files.length} images queued.`);
         }
 
         function renderQueue() {
             el.queueCount.textContent = `Q: ${queue.length}`;
-            el.startBtn.disabled = isProcessing || queue.length === 0;
+            updateButtonStates();
             if (queue.length === 0) {
                 el.fileQueue.innerHTML = `<div class="text-center py-4 text-zinc-600 text-[10px]">No active targets</div>`;
                 return;
@@ -427,421 +409,291 @@
                 return;
             }
             el.imageViewer.innerHTML = queue.map((item, idx) => `
-                <div class="relative border border-zinc-800 mb-2 lg:mb-4 bg-zinc-950">
-                    <div class="absolute top-0 left-0 bg-black text-red-500 px-2 py-1 text-[9px] border-r border-b border-zinc-800 z-10">ID: PAGE_${idx + 1}</div>
-                    <img id="render-src-${idx}" src="${item.url}" class="w-full h-auto block opacity-80 hover:opacity-100 transition-opacity">
+                <div class="relative border border-zinc-800 mb-4 bg-zinc-950">
+                    <div class="absolute top-0 left-0 bg-black text-red-500 px-2 py-1 text-[9px] border-r border-b border-zinc-800 z-10">PAGE_${idx + 1}</div>
+                    <img id="render-src-${idx}" src="${item.url}" class="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity">
                 </div>
             `).join('');
         }
 
-        const FREE_RPM_LIMIT = 15;
+        // RPM Rate Limiter Display
         let requestTimestamps = [];
-
-        function trackApiRequest() {
-            requestTimestamps.push(Date.now());
-            updateApiUsage();
-        }
-
+        function trackApiRequest() { requestTimestamps.push(Date.now()); updateApiUsage(); }
         function updateApiUsage() {
             const now = Date.now();
             requestTimestamps = requestTimestamps.filter(t => now - t < 60000);
-            const currentRpm = requestTimestamps.length;
-            const percentage = Math.min((currentRpm / FREE_RPM_LIMIT) * 100, 100);
-            
+            const percentage = Math.min((requestTimestamps.length / 15) * 100, 100);
             if (el.rpmCount && el.rpmBar) {
-                el.rpmCount.textContent = `${currentRpm} / ${FREE_RPM_LIMIT}`;
+                el.rpmCount.textContent = `${requestTimestamps.length} / 15`;
                 el.rpmBar.style.width = `${percentage}%`;
-                if (percentage < 50) {
-                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300";
-                    el.rpmCount.className = "text-[9px] text-emerald-500 font-bold";
-                } else if (percentage < 80) {
-                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-yellow-500 transition-all duration-300";
-                    el.rpmCount.className = "text-[9px] text-yellow-500 font-bold";
-                } else {
-                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-red-500 shadow-[0_0_8px_rgba(220,38,38,0.6)] transition-all duration-300";
-                    el.rpmCount.className = "text-[9px] text-red-500 font-bold animate-pulse";
-                }
             }
         }
         setInterval(updateApiUsage, 1000);
 
-        async function fetchWithBackoff(model, payload) {
+        async function apiRequest(model, payload) {
             const apiKey = el.apiKeyInput.value.trim();
-            if(!apiKey) {
-                throw new Error("Missing Gemini API Key. Please provide one in the console sidebar configuration element.");
-            }
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            for (let i = 0; i < 6; i++) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                    trackApiRequest();
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!res.ok) {
-                        const errText = await res.text();
-                        throw new Error(`API Error: ${res.status} - ${errText}`);
-                    }
-                    return await res.json();
-                } catch (e) {
-                    if (i === 5) throw e;
-                    await new Promise(r => setTimeout(r, delays[i]));
-                }
-            }
+            if(!apiKey) throw new Error("Missing Gemini API Key in the sidebar box.");
+            trackApiRequest();
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(!res.ok) throw new Error(`Status ${res.status}: ${await res.text()}`);
+            return await res.json();
         }
 
+        // 1. RUN OCR ENGINE
         el.startBtn.onclick = async () => {
             isProcessing = true;
-            renderQueue();
+            updateButtonStates();
             el.overlay.classList.remove('hidden');
-            if(el.resultArea.value.trim() === "") el.resultArea.value = "";
-            speechBubbleCoordinates = []; 
+            el.resultArea.value = "";
+            speechBubbleCoordinates = [];
 
             for (let i = 0; i < queue.length; i++) {
                 const item = queue[i];
-                if (item.status === 'done') continue;
                 item.status = 'processing';
                 renderQueue();
-                el.progressText.textContent = `EXTRACTING_DATA [${i + 1}/${queue.length}]`;
+                el.progressText.textContent = `RUNNING OCR [${i + 1}/${queue.length}]`;
+                
                 try {
-                    const text = await processSingleFile(item.file, i);
-                    if(text.trim()) {
-                        el.resultArea.value += (el.resultArea.value ? "\n\n" : "") + text;
+                    const extractedText = await processFileOCR(item.file, i);
+                    if(extractedText.trim()) {
+                        el.resultArea.value += (el.resultArea.value ? "\n\n" : "") + extractedText;
                         localStorage.setItem('sundayComicRawText', el.resultArea.value);
                     }
                     item.status = 'done';
                 } catch (err) {
-                    console.error("OCR Error:", err);
                     item.status = 'error';
-                    showToast(`[Error] OCR Failed: ${err.message || err}`);
+                    showToast(`OCR Failed: ${err.message}`);
                 }
                 renderQueue();
-                el.resultArea.scrollTop = el.resultArea.scrollHeight;
             }
             isProcessing = false;
             el.overlay.classList.add('hidden');
-            if(el.resultArea.value.trim().length > 0) el.translateBtn.disabled = false;
-            renderQueue();
-            showToast("[Success] OCR sequence complete.");
             el.tabRaw.click();
         };
 
-        async function processSingleFile(file, pageIndex) {
+        function processFileOCR(file, index) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.src = URL.createObjectURL(file);
                 img.onload = async () => {
-                    let { width, height } = img;
-                    let scale = width > MAX_WIDTH ? MAX_WIDTH / width : 1;
-                    const drawWidth = width * scale;
-                    const drawHeight = height * scale;
-                    const chunksCount = Math.ceil(drawHeight / MAX_STRIP_HEIGHT);
-                    let combinedTextParts = [];
-
-                    for (let c = 0; c < chunksCount; c++) {
-                        el.chunkText.textContent = `> Processing segment ${c + 1}/${chunksCount}...`;
-                        const chunkCanvasH = Math.min(MAX_STRIP_HEIGHT, drawHeight - (c * MAX_STRIP_HEIGHT));
-                        const canvas = document.createElement('canvas');
-                        canvas.width = drawWidth;
-                        canvas.height = chunkCanvasH;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, (c * MAX_STRIP_HEIGHT) / scale, width, chunkCanvasH / scale, 0, 0, drawWidth, chunkCanvasH);
-                        const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                        try {
-                            const result = await callGeminiOCR(base64, pageIndex, c, chunkCanvasH, drawWidth);
-                            if (result && result.trim()) combinedTextParts.push(result.trim());
-                        } catch (e) {
-                            console.error("Chunk failed", e);
-                            combinedTextParts.push(`[SYSTEM ERROR: Chunk failed to process]`);
+                    let w = img.width, h = img.height;
+                    let scale = w > MAX_WIDTH ? MAX_WIDTH / w : 1;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w * scale; canvas.height = h * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                    const model = el.modelSelect.value;
+                    
+                    const prompt = `Perform OCR on this manga panel page. Return a JSON object with an array called "bubbles". Inside each item provide "text" string and "box" [ymin, xmin, ymax, xmax] layout mappings relative to the image size on a 0 to 1000 normalized grid scale.`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                        generationConfig: {
+                            temperature: 0.1, responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT", required: ["bubbles"],
+                                properties: {
+                                    bubbles: {
+                                        type: "ARRAY",
+                                        items: { type: "OBJECT", required: ["text", "box"], properties: { text: { type: "STRING" }, box: { type: "ARRAY", items: { type: "NUMBER" } } } }
+                                    }
+                                }
+                            }
                         }
-                        if (c < chunksCount - 1) await new Promise(r => setTimeout(r, 1200));
-                    }
-                    URL.revokeObjectURL(img.src);
-                    resolve(combinedTextParts.join("\n\n"));
+                    };
+
+                    try {
+                        const data = await apiRequest(model, payload);
+                        const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"bubbles\":[]}";
+                        const parsed = JSON.parse(rawJson);
+                        
+                        if(parsed.bubbles) {
+                            parsed.bubbles.forEach(b => {
+                                speechBubbleCoordinates.push({
+                                    pageIndex: index,
+                                    text: b.text,
+                                    box: [
+                                        Math.round(b.box[0] * canvas.height / 1000),
+                                        Math.round(b.box[1] * canvas.width / 1000),
+                                        Math.round(b.box[2] * canvas.height / 1000),
+                                        Math.round(b.box[3] * canvas.width / 1000)
+                                    ]
+                                });
+                            });
+                            resolve(parsed.bubbles.map(b => b.text.replace(/\n/g, ' ')).join('\n\n'));
+                        } else {
+                            resolve("");
+                        }
+                    } catch(e) { reject(e); }
                 };
-                img.onerror = () => reject("Load failed");
             });
         }
 
-        async function callGeminiOCR(base64, pageIndex, chunkIndex, chunkHeight, canvasWidth) {
-            const model = el.modelSelect.value || 'gemini-2.5-flash';
-            const prompt = `Perform highly accurate OCR on this manga/comic layout. Return a JSON object containing an array called "bubbles". Each bubble element MUST be an object containing "text" (the transcription string) and "box" [ymin, xmin, ymax, xmax] coordinates localized inside the panel space (normalized 0-1000 bounds). Maintain strict reading sequence orders.`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
-                generationConfig: {
-                    temperature: 0.1, 
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            bubbles: {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        text: { type: "STRING" },
-                                        box: { type: "ARRAY", items: { type: "NUMBER" } }
-                                    },
-                                    required: ["text", "box"]
-                                }
-                            }
-                        },
-                        required: ["bubbles"]
-                    }
-                }
-            };
-
-            try {
-                const data = await fetchWithBackoff(model, payload);
-                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"bubbles\":[]}";
-                let parsed = JSON.parse(rawJson);
-                if (parsed.bubbles) {
-                    parsed.bubbles.forEach(b => {
-                        let globalYmin = Math.round(((chunkIndex * MAX_STRIP_HEIGHT) + (b.box[0] * chunkHeight / 1000)));
-                        let globalYmax = Math.round(((chunkIndex * MAX_STRIP_HEIGHT) + (b.box[2] * chunkHeight / 1000)));
-                        let globalXmin = Math.round((b.box[1] * canvasWidth / 1000));
-                        let globalXmax = Math.round((b.box[3] * canvasWidth / 1000));
-
-                        speechBubbleCoordinates.push({
-                            pageIndex: pageIndex,
-                            text: b.text,
-                            box: [globalYmin, globalXmin, globalYmax, globalXmax]
-                        });
-                    });
-                    return parsed.bubbles.map(b => b.text.replace(/\n/g, ' ').trim()).filter(t => t.length > 0).join('\n\n');
-                }
-                return "";
-            } catch (e) {
-                console.error("Coordinates gathering error", e);
-                return "";
-            }
-        }
-
+        // 2. COMPILE TRANSLATION ENGINE
         el.translateBtn.onclick = async () => {
             const rawText = el.resultArea.value.trim();
             if (!rawText) return;
             isProcessing = true;
+            updateButtonStates();
             el.overlay.classList.remove('hidden');
-            el.progressText.textContent = "COMPILING_MYANMAR";
-            el.chunkText.textContent = "> Injecting glossary definitions...";
+            el.progressText.textContent = "COMPILING TRANSLATION";
 
             try {
-                const inputArray = rawText.split('\n\n').filter(l => l.trim().length > 0);
-                const translationData = await callGeminiTranslate(inputArray);
-                el.translationArea.value = translationData.translation;
-                localStorage.setItem('sundayComicTransText', el.translationArea.value);
-                el.typesetBtn.disabled = false;
+                const lines = rawText.split('\n\n').filter(l => l.trim());
+                const model = el.modelSelect.value;
+                const glossary = el.glossaryArea.value.trim();
                 
-                if (translationData.newTerms && translationData.newTerms.toUpperCase() !== "NONE") {
-                    const currentGlossary = el.glossaryArea.value.trim();
-                    const existingLines = currentGlossary.toLowerCase().split('\n');
-                    const termsToAdd = translationData.newTerms.split('\n')
-                        .filter(t => t.includes('=') && !existingLines.some(el => el.includes(t.split('=')[0].trim().toLowerCase())))
-                        .join('\n');
-
-                    if (termsToAdd) {
-                        el.glossaryArea.value = currentGlossary ? currentGlossary + '\n' + termsToAdd : termsToAdd;
-                        localStorage.setItem('sundayComicGlossary', el.glossaryArea.value);
-                        showToast("[System] dict.json updated automatically.");
+                const systemPrompt = `You are an expert Manga Translator. Translate the given array values from English to natural, fluid Myanmar script (Burmese). Maintain a 1:1 direct array matching format.${glossary ? '\nGlossary mappings:\n' + glossary : ''}`;
+                const payload = {
+                    contents: [{ parts: [{ text: JSON.stringify(lines) }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT", required: ["translated"],
+                            properties: { translated: { type: "ARRAY", items: { type: "STRING" } } }
+                        }
                     }
-                } else {
-                     showToast("[Success] Build compiled. Ready for final tuning and typesetting.");
+                };
+
+                const data = await apiRequest(model, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"translated\":[]}";
+                const parsed = JSON.parse(rawJson);
+                
+                if (parsed.translated) {
+                    el.translationArea.value = parsed.translated.join('\n\n');
+                    localStorage.setItem('sundayComicTransText', el.translationArea.value);
+                    showToast("[Success] Translation loaded.");
                 }
             } catch (err) {
-                console.error("Translation Error:", err);
-                showToast(`[Error] Compilation failed: ${err.message || err}`);
+                showToast(`Translation Failed: ${err.message}`);
             } finally {
                 isProcessing = false;
+                updateButtonStates();
                 el.overlay.classList.add('hidden');
             }
         };
 
-        async function callGeminiTranslate(inputArray) {
-            const model = el.modelSelect.value || 'gemini-2.5-flash';
-            const currentGlossary = el.glossaryArea.value.trim();
-            const glossaryInstruction = currentGlossary ? `\nMANDATORY GLOSSARY:\n${currentGlossary}` : "";
-            const systemPrompt = `You are an elite Manga Localizer. Translate from English to natural, fluid Myanmar (Burmese). Map strictly 1-to-1 inside the array fields.${glossaryInstruction}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: JSON.stringify(inputArray) }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            translatedBubbles: { type: "ARRAY", items: { type: "STRING" } },
-                            newTerms: { type: "STRING" }
-                        },
-                        required: ["translatedBubbles", "newTerms"]
-                    }
-                }
-            };
-
-            const data = await fetchWithBackoff(model, payload);
-            const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            let parsedResult = JSON.parse(rawJson);
-            let transArray = parsedResult.translatedBubbles || [];
-            let cleanedTranslation = transArray.map(bubble => bubble.replace(/[၁။]/g, ' ').trim()).join('\n\n');
-            return { translation: cleanedTranslation, newTerms: parsedResult.newTerms || "NONE" };
-        }
-
-        // TYPESETTER ENGINE: Pure sandbox-proof client reader engine setup
+        // 3. TYPESET OVERLAY ENGINE
         el.typesetBtn.onclick = async () => {
             const finalBurmeseText = el.translationArea.value.trim();
-            if (!finalBurmeseText) return;
-            if (queue.length === 0) {
-                showToast("[Warning] No source images in workspace payload.");
-                return;
-            }
+            if (!finalBurmeseText || queue.length === 0) return;
 
             isProcessing = true;
+            updateButtonStates();
             el.overlay.classList.remove('hidden');
-            el.progressText.textContent = "TYPESETTING_LAYOUTS";
-            el.chunkText.textContent = "> Executing Secure Client-Side Canvas Engine...";
+            el.progressText.textContent = "TYPESETTING CANVAS";
 
             try {
-                const burmeseLines = finalBurmeseText.split('\n\n').filter(l => l.trim().length > 0);
+                const translationLines = finalBurmeseText.split('\n\n').filter(l => l.trim());
+                let absoluteBubbleCounter = 0;
 
                 for (let i = 0; i < queue.length; i++) {
                     const item = queue[i];
                     const pageBubbles = speechBubbleCoordinates.filter(b => b.pageIndex === i);
                     
-                    await new Promise((resolve, reject) => {
+                    await new Promise((resolve) => {
                         const img = new Image();
-                        img.crossOrigin = "anonymous"; 
-                        img.src = item.url;
-                        
+                        img.src = URL.createObjectURL(item.file);
                         img.onload = () => {
-                            let origWidth = img.width;
-                            let scale = origWidth > MAX_WIDTH ? MAX_WIDTH / origWidth : 1;
+                            let w = img.width, h = img.height;
+                            let scale = w > MAX_WIDTH ? MAX_WIDTH / w : 1;
                             
                             const canvas = document.createElement('canvas');
-                            canvas.width = origWidth * scale;
-                            canvas.height = img.height * scale;
+                            canvas.width = w * scale; canvas.height = h * scale;
                             const ctx = canvas.getContext('2d');
-                            
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                            pageBubbles.forEach((bubble, idx) => {
-                                const currentText = burmeseLines[idx] || bubble.text;
-                                let [ymin, xmin, ymax, xmax] = bubble.box;
+                            pageBubbles.forEach(bubble => {
+                                const burmeseText = translationLines[absoluteBubbleCounter] || bubble.text;
+                                absoluteBubbleCounter++;
 
-                                let w = xmax - xmin;
-                                let h = ymax - ymin;
+                                let [ymin, xmin, ymax, xmax] = bubble.box;
+                                let bw = xmax - xmin, bh = ymax - ymin;
                                 
+                                // Clean existing bubble space
                                 ctx.fillStyle = "#FFFFFF";
                                 ctx.beginPath();
-                                ctx.ellipse(xmin + w/2, ymin + h/2, w/2 + 4, h/2 + 4, 0, 0, 2 * Math.PI);
+                                ctx.ellipse(xmin + bw/2, ymin + bh/2, bw/2 + 3, bh/2 + 3, 0, 0, 2 * Math.PI);
                                 ctx.fill();
 
+                                // Write Burmese text inside coordinates
                                 ctx.fillStyle = "#000000";
-                                let fontSize = Math.max(12, Math.min(w / 6, 22));
-                                ctx.font = `bold ${fontSize}px 'Padauk', sans-serif`;
+                                let size = Math.max(12, Math.min(bw / 6, 20));
+                                ctx.font = `bold ${size}px 'Padauk', sans-serif`;
                                 ctx.textAlign = "center";
                                 ctx.textBaseline = "middle";
 
-                                wrapText(ctx, currentText, xmin + w/2, ymin + h/2, w - 10, fontSize + 4);
+                                wrapText(ctx, burmeseText, xmin + bw/2, ymin + bh/2, bw - 8, size + 4);
                             });
 
-                            try {
-                                canvas.toBlob((blob) => {
-                                    if (!blob) {
-                                        reject(new Error("Canvas layout broken"));
-                                        return;
-                                    }
-                                    const newUrl = URL.createObjectURL(blob);
-                                    item.url = newUrl;
-                                    resolve();
-                                }, 'image/jpeg', 0.9);
-                            } catch (canvasError) {
-                                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                                item.url = dataUrl;
+                            canvas.toBlob((blob) => {
+                                URL.revokeObjectURL(item.url);
+                                item.url = URL.createObjectURL(blob);
                                 resolve();
-                            }
+                            }, 'image/jpeg', 0.9);
                         };
-                        img.onerror = () => reject("Target image load failure");
                     });
                 }
 
                 renderImageViewer();
-                showToast("[Success] Canvas Typesetter sequence complete!");
                 el.tabImg.click();
-
+                showToast("[Success] Typeset compilation complete!");
             } catch (err) {
-                console.error("Typesetting Fault:", err);
-                showToast("[Error] Typesetting process encountered an image layout processing error.");
+                showToast("Typeset Failed.");
             } finally {
                 isProcessing = false;
+                updateButtonStates();
                 el.overlay.classList.add('hidden');
             }
         };
 
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const words = text.split(' ');
-            let lines = [];
-            let currentLine = words[0];
+            let lines = [], currentLine = words[0];
 
             for (let n = 1; n < words.length; n++) {
                 let testLine = currentLine + ' ' + words[n];
-                let metrics = context.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
+                if (ctx.measureText(testLine).width > maxWidth) {
                     lines.push(currentLine);
                     currentLine = words[n];
-                } else {
-                    currentLine = testLine;
-                }
+                } else { currentLine = testLine; }
             }
             lines.push(currentLine);
 
             let startY = y - ((lines.length - 1) * lineHeight) / 2;
             for (let k = 0; k < lines.length; k++) {
-                context.fillText(lines[k], x, startY + (k * lineHeight));
+                ctx.fillText(lines[k], x, startY + (k * lineHeight));
             }
         }
 
+        // Export Actions
         el.downloadBtn.onclick = () => {
             const text = el.translationArea.value.trim();
-            if (!text) {
-                showToast("[Warning] Output buffer is empty.");
-                return;
-            }
-            let filename = el.filenameInput.value.trim();
-            if (filename === "") filename = "Translated_Chapter";
-            if (!filename.toLowerCase().endsWith(".txt")) filename += ".txt";
+            if (!text) return;
+            let title = el.filenameInput.value.trim() || "Chapter";
             const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("[System] File saved to local drive.");
+            a.href = url; a.download = title.endsWith(".txt") ? title : title + ".txt";
+            a.click(); URL.revokeObjectURL(url);
         };
 
-        function copy(text, msg) {
-            const ta = document.createElement("textarea");
-            ta.value = text; document.body.appendChild(ta);
-            ta.select(); document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast(msg);
+        function copyToClipboard(text, msg) {
+            navigator.clipboard.writeText(text).then(() => showToast(msg));
         }
-
-        el.copyBtn.onclick = () => copy(el.resultArea.value, "[System] RAW text copied to clipboard.");
-        el.copyTransBtn.onclick = () => copy(el.translationArea.value, "[System] MYANMAR text copied to clipboard.");
+        el.copyBtn.onclick = () => copyToClipboard(el.resultArea.value, "RAW data copied.");
+        el.copyTransBtn.onclick = () => copyToClipboard(el.translationArea.value, "Myanmar translation copied.");
 
         function showToast(msg) {
             el.toast.textContent = msg;
             el.toast.classList.remove('translate-y-32');
-            el.toast.classList.add('translate-y-0');
-            setTimeout(() => {
-                el.toast.classList.remove('translate-y-0');
-                el.toast.classList.add('translate-y-32');
-            }, 3000);
+            setTimeout(() => el.toast.classList.add('translate-y-32'), 3000);
         }
     </script>
 </body>
