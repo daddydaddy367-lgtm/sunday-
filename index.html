@@ -288,13 +288,11 @@
             rpmBar: document.getElementById('rpmBar')
         };
 
-        // Sidebar Toggle
         el.toggleSidebar.onclick = () => {
             el.sidebar.classList.toggle('hidden');
             if(!el.sidebar.classList.contains('hidden')) el.sidebar.classList.add('flex');
         };
 
-        // Cache Management
         el.glossaryArea.value = localStorage.getItem('sundayComicGlossary') || '';
         el.glossaryArea.addEventListener('input', (e) => localStorage.setItem('sundayComicGlossary', e.target.value));
         
@@ -325,7 +323,6 @@
             el.typesetBtn.disabled = isProcessing || el.translationArea.value.trim() === '' || queue.length === 0;
         }
 
-        // Tab views
         el.tabImg.onclick = () => {
             el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
             el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
@@ -341,7 +338,6 @@
             el.copyBtn.classList.remove('hidden'); 
         };
 
-        // File loading core
         el.fileInput.onchange = (e) => {
             if (e.target.files.length > 0) addFiles(Array.from(e.target.files));
         };
@@ -580,7 +576,7 @@
             }
         };
 
-        // 3. TYPESET OVERLAY ENGINE (AUTOMATED PROGRESSIVE BOUNDING MASK)
+        // 3. TYPESET OVERLAY ENGINE (PINPOINT ACCURATE MASKING OVER TEXT ONLY)
         el.typesetBtn.onclick = async () => {
             const finalBurmeseText = el.translationArea.value.trim();
             if (!finalBurmeseText || queue.length === 0) return;
@@ -617,13 +613,10 @@
                                 let [ymin, xmin, ymax, xmax] = bubble.box;
                                 let bw = xmax - xmin, bh = ymax - ymin;
                                 
-                                // Dynamic percentage padding bounds
-                                const padX = bw * 0.12; 
-                                const padY = bh * 0.12;
-
-                                // Wipes out ONLY the core text center. Leaves original strokes fully intact.
+                                // FIX: Targets ONLY the precise box bounding the original English text block.
+                                // It covers ONLY the internal text layout area, completely saving the bubble lines!
                                 ctx.fillStyle = "#FFFFFF";
-                                ctx.fillRect(xmin + padX, ymin + padY, bw - (padX * 2), bh - (padY * 2));
+                                ctx.fillRect(xmin, ymin, bw, bh);
 
                                 // Font setup configuration
                                 ctx.fillStyle = "#000000";
@@ -632,8 +625,8 @@
                                 ctx.textAlign = "center";
                                 ctx.textBaseline = "middle";
 
-                                // Safe boundaries wrap and 1.55 vertical padding setup
-                                wrapText(ctx, burmeseText, xmin + bw/2, ymin + bh/2, bw - 16, size * 1.55);
+                                // Wrap layout delivery inside bounds safely
+                                wrapText(ctx, burmeseText, xmin + bw/2, ymin + bh/2, bw, size * 1.55);
                             });
 
                             canvas.toBlob((blob) => {
@@ -677,7 +670,6 @@
 
             let startY = y - ((lines.length - 1) * lineHeight) / 2;
             for (let k = 0; k < lines.length; k++) {
-                // High-readability mask outline
                 ctx.strokeStyle = "#FFFFFF";
                 ctx.lineWidth = 4;
                 ctx.strokeText(lines[k], x, startY + (k * lineHeight));
@@ -686,7 +678,6 @@
             }
         }
 
-        // Export Actions
         el.downloadBtn.onclick = () => {
             const text = el.translationArea.value.trim();
             if (!text) return;
