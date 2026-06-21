@@ -19,718 +19,147 @@
             --term-text: #e4e4e7;
         }
 
-        body { 
-            font-family: 'Fira Code', monospace; 
-            background-color: var(--term-black); 
-            color: var(--term-text); 
-            background-image: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(20, 20, 20, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
-            background-size: 100% 4px, 3px 100%;
-        }
-
-        .myanmar-text { font-family: 'Padauk', sans-serif; line-height: 1.8; font-size: 0.85rem;}
-        @media (min-width: 1024px) {
-            .myanmar-text { line-height: 2.2; font-size: 1.1rem; }
-        }
-
-        .ide-panel { 
-            background: var(--term-gray);
-            border: 1px solid var(--term-border);
-            transition: border-color 0.2s;
-        }
-
-        .ide-panel:hover {
-            border-color: #52525b;
-        }
-
-        .code-btn {
-            background: transparent;
-            color: var(--term-red);
-            border: 1px solid var(--term-red);
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .code-btn:hover:not(:disabled) {
-            background: var(--term-red);
-            color: var(--term-black);
-            box-shadow: 0 0 10px var(--term-red-glow);
-        }
-
-        .code-btn.btn-purple {
-            color: var(--term-purple);
-            border-color: var(--term-purple);
-        }
-
-        .code-btn.btn-purple:hover:not(:disabled) {
-            background: var(--term-purple);
-            color: var(--term-black);
-            box-shadow: 0 0 10px var(--term-purple-glow);
-        }
-
-        .code-btn:active:not(:disabled) {
-            transform: scale(0.98);
-        }
-
-        .code-btn:disabled {
-            border-color: #3f3f46;
-            color: #52525b;
-            cursor: not-allowed;
-            background: transparent !important;
-            box-shadow: none !important;
-        }
-
+        body { font-family: 'Fira Code', monospace; background-color: var(--term-black); color: var(--term-text); }
+        .myanmar-text { font-family: 'Padauk', sans-serif; }
+        .ide-panel { background: var(--term-gray); border: 1px solid var(--term-border); }
+        .code-btn { background: transparent; color: var(--term-red); border: 1px solid var(--term-red); text-transform: uppercase; transition: all 0.2s; }
+        .code-btn:hover:not(:disabled) { background: var(--term-red); color: var(--term-black); }
+        .code-btn.btn-purple { color: var(--term-purple); border-color: var(--term-purple); }
+        .code-btn.btn-purple:hover:not(:disabled) { background: var(--term-purple); color: var(--term-black); }
+        .code-btn:disabled { border-color: #3f3f46; color: #52525b; cursor: not-allowed; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: var(--term-black); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 0; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--term-red); }
-
-        .loader { 
-            border: 2px solid #18181b; 
-            border-top: 2px solid var(--term-red); 
-            width: 40px; 
-            height: 40px; 
-            animation: spin 0.8s linear infinite; 
-        }
-
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; }
+        .loader { border: 2px solid #18181b; border-top: 2px solid var(--term-red); width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .file-card { 
-            border-left: 2px solid transparent; 
-            border-bottom: 1px solid #18181b;
-        }
-        .file-card.processing { border-left-color: var(--term-red); background: rgba(220, 38, 38, 0.05); }
-        .file-card.done { border-left-color: #10b981; opacity: 0.6; }
-
-        input, textarea, select {
-            background: var(--term-black);
-            border: 1px solid var(--term-border);
-            color: var(--term-text);
-        }
-        
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--term-red);
-            outline: none;
-            box-shadow: inset 0 0 5px var(--term-red-glow);
-        }
-
-        @media (min-width: 1024px) {
-            .app-container { height: 100vh; overflow: hidden; }
-            .main-content { height: calc(100vh - 65px); }
-        }
+        input, textarea, select { background: var(--term-black); border: 1px solid var(--term-border); color: var(--term-text); }
     </style>
 </head>
-<body class="flex flex-col min-h-screen app-container">
-
-    <header class="p-2 lg:p-3 border-b border-zinc-800 bg-black flex justify-between items-center sticky top-0 z-50 shrink-0">
-        <div class="flex items-center gap-2 lg:gap-3">
-            <button id="toggleSidebar" class="p-1.5 text-zinc-400 hover:text-red-500 transition-colors" title="Toggle Explorer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-            <div class="flex items-center gap-1 lg:gap-2">
-                <span class="text-red-600 font-bold">~</span>
-                <span class="text-zinc-500">/</span>
-                <span class="text-zinc-300 font-bold tracking-wider text-[10px] lg:text-sm">THU_THU</span>
-                <span class="text-zinc-500">/</span>
-                <span class="text-red-500 text-[10px] lg:text-sm truncate max-w-[100px] lg:max-w-none">sunday_compiler</span>
-            </div>
-        </div>
-        <div id="queueCount" class="text-[10px] lg:text-xs text-red-500 border border-red-900 bg-red-950/30 px-2 py-1">Q: 0</div>
+<body class="flex flex-col min-h-screen">
+    <header class="p-4 border-b border-zinc-800 bg-black flex justify-between items-center">
+        <span class="text-red-500 font-bold">SUNDAY_COMPILER</span>
+        <div id="queueCount" class="text-xs text-red-500">Q: 0</div>
     </header>
 
-    <main class="flex-1 flex flex-row main-content overflow-hidden relative">
-        
-        <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-4 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
-            
-            <label id="dropZone" for="fileInput" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
-                <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors select-none"><span class="text-red-600">></span> upload_images.sh</p>
-            </label>
+    <main class="flex-1 flex p-4 gap-4">
+        <section id="sidebar" class="w-80 flex flex-col gap-4">
+            <label id="dropZone" for="fileInput" class="h-20 ide-panel flex items-center justify-center cursor-pointer text-xs text-zinc-400">UPLOAD_IMAGES.SH</label>
             <input type="file" id="fileInput" class="hidden" accept="image/*" multiple>
-
-            <div class="flex flex-col gap-1 shrink-0">
-                <div class="flex justify-between items-center pb-1 border-b border-zinc-800">
-                    <h3 class="text-[10px] uppercase text-zinc-500">Workspace</h3>
-                    <button id="clearAll" class="text-[9px] hover:text-red-500 transition-colors">rm -rf /</button>
-                </div>
-                <div id="fileQueue" class="space-y-0 overflow-y-auto max-h-32 custom-scrollbar">
-                    <div class="text-center py-4 text-zinc-600 text-[10px]">No active targets</div>
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-1 shrink-0">
-                <h3 class="text-[10px] uppercase text-red-500 border-b border-zinc-800 pb-1">dict.json (Glossary)</h3>
-                <textarea id="glossaryArea" class="w-full h-24 p-2 text-[10px] custom-scrollbar" placeholder="Character Name = ဘာသာပြန်အမည်"></textarea>
-            </div>
-
-            <div class="flex flex-col gap-2 mt-2 shrink-0">
-                <button id="startBtn" class="code-btn py-1.5 lg:py-2 text-[10px] lg:text-xs" disabled>
-                    ./run_ocr.sh
-                </button>
-                <button id="translateBtn" class="code-btn py-1.5 lg:py-2 text-[10px] lg:text-xs" disabled>
-                    ./compile_myanmar.sh
-                </button>
-                <button id="typesetBtn" class="code-btn btn-purple py-1.5 lg:py-2 text-[10px] lg:text-xs" disabled>
-                    ./typeset_output.sh
-                </button>
-            </div>
-
-            <div class="pt-2 shrink-0">
-                <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL (PRO NEEDS CUSTOM KEY)</label>
-                <select id="modelSelect" class="w-full p-2 text-[10px] lg:text-xs">
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                </select>
-            </div>
-
-            <div class="pt-2 shrink-0">
-                <label class="block text-[9px] uppercase text-zinc-500 mb-1">ENV_VAR: GEMINI_API_KEY</label>
-                <input type="password" id="apiKeyInput" class="w-full p-2 text-[10px] lg:text-xs" placeholder="AIZAsy...">
-            </div>
-
-            <div class="mt-2 shrink-0 border border-zinc-800 p-2 bg-[#0a0a0a]">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[9px] uppercase text-zinc-500">RPM Load (Est)</span>
-                    <span id="rpmCount" class="text-[9px] text-emerald-500 font-bold">0 / 15</span>
-                </div>
-                <div class="w-full bg-black h-1.5 border border-zinc-800 relative overflow-hidden">
-                    <div id="rpmBar" class="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
+            <textarea id="glossaryArea" class="w-full h-24 p-2 text-xs" placeholder="Glossary: Character Name = ဘာသာပြန်"></textarea>
+            <button id="startBtn" class="code-btn py-2 text-xs" disabled>./RUN_OCR.SH</button>
+            <button id="translateBtn" class="code-btn py-2 text-xs" disabled>./COMPILE_MYANMAR.SH</button>
+            <button id="typesetBtn" class="code-btn btn-purple py-2 text-xs" disabled>./TYPESET_OUTPUT.SH</button>
         </section>
 
-        <section class="flex-1 p-1 lg:p-4 flex flex-col gap-2 lg:gap-4 bg-black relative w-full overflow-hidden">
-            <div class="flex-1 flex flex-row gap-1 lg:gap-4 h-full overflow-hidden">
-                
-                <div class="w-1/2 flex flex-col gap-1 lg:gap-2 h-full relative">
-                    <div class="flex gap-1 h-6 lg:h-8 shrink-0">
-                        <button id="tabImg" class="px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center">
-                            <span class="hidden sm:inline">viewer.exe</span><span class="sm:hidden">IMG</span>
-                        </button>
-                        <button id="tabRaw" class="px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center">
-                            <span class="hidden sm:inline">raw_data.txt</span><span class="sm:hidden">RAW</span>
-                        </button>
-                        <div class="flex-1 border-b border-zinc-800"></div>
-                        <button id="copyBtn" class="px-2 lg:px-3 text-zinc-400 hover:text-red-500 hidden border-b border-zinc-800" title="Copy">
-                            <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        </button>
-                    </div>
-
-                    <div class="flex-1 relative overflow-hidden border border-zinc-800">
-                        <div id="imageViewer" class="absolute inset-0 w-full h-full p-1 lg:p-4 bg-[#0a0a0a] custom-scrollbar overflow-y-auto flex flex-col gap-2 lg:gap-4">
-                            <div class="text-center py-10 text-zinc-600 text-[10px] lg:text-xs">Waiting for stream...</div>
-                        </div>
-                        <textarea id="resultArea" class="absolute inset-0 w-full h-full p-2 lg:p-4 text-[10px] lg:text-xs focus:outline-none bg-[#050505] custom-scrollbar resize-none leading-relaxed hidden" placeholder="> Awaiting OCR..."></textarea>
-                    </div>
-                </div>
-
-                <div class="w-1/2 flex flex-col gap-1 lg:gap-2 h-full">
-                    <div class="flex justify-between items-end h-6 lg:h-8 shrink-0 border-b border-zinc-800 pb-1">
-                        <h2 class="text-[10px] lg:text-xs text-red-500 pl-1 lg:pl-2 truncate w-16 lg:w-auto">output.txt</h2>
-                        <div class="flex gap-1 lg:gap-2">
-                            <input type="text" id="filenameInput" class="px-1 lg:px-2 h-5 lg:h-6 w-12 lg:w-24 text-[8px] lg:text-[10px] focus:outline-none bg-black border border-zinc-800" placeholder="filename" value="Chapter">
-                            <button id="copyTransBtn" class="text-zinc-400 hover:text-red-500 px-1 lg:px-2 text-[8px] lg:text-[10px]">COPY</button>
-                            <button id="downloadBtn" class="text-red-500 hover:text-red-400 px-1 lg:px-2 text-[8px] lg:text-[10px]">SAVE</button>
-                        </div>
-                    </div>
-                    <textarea id="translationArea" class="flex-1 border border-zinc-800 p-2 lg:p-4 myanmar-text focus:outline-none bg-[#050505] custom-scrollbar resize-none" placeholder="> ဘာသာပြန်အဖြေ..."></textarea>
-                </div>
-            </div>
-            
-            <div id="processingOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-50">
-                <div class="loader"></div>
-                <div class="text-center font-mono">
-                    <p id="progressText" class="text-red-500 text-[10px] lg:text-sm">EXECUTING</p>
-                    <p id="chunkText" class="text-[8px] lg:text-[10px] text-zinc-500 mt-1">> Establishing connection...</p>
-                </div>
-            </div>
+        <section class="flex-1 flex flex-col gap-4">
+            <div class="flex-1 border border-zinc-800 bg-[#0a0a0a] overflow-auto p-4" id="imageViewer"></div>
+            <textarea id="translationArea" class="h-48 w-full p-4 myanmar-text bg-[#050505] border border-zinc-800" placeholder="> Myanmar Translation..."></textarea>
         </section>
     </main>
 
-    <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
+    <div id="processingOverlay" class="hidden absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50">
+        <div class="loader"></div>
+        <p id="progressText" class="text-red-500 mt-4">PROCESSING...</p>
+    </div>
 
     <script>
-        const MAX_STRIP_HEIGHT = 1800; 
-        const MAX_WIDTH = 1000; 
-        let queue = [];
-        let isProcessing = false;
-        let speechBubbleCoordinates = []; 
-
+        let queue = [], speechBubbleCoordinates = [], isProcessing = false;
         const el = {
-            sidebar: document.getElementById('sidebar'),
-            toggleSidebar: document.getElementById('toggleSidebar'),
             fileInput: document.getElementById('fileInput'),
-            dropZone: document.getElementById('dropZone'),
-            fileQueue: document.getElementById('fileQueue'),
-            glossaryArea: document.getElementById('glossaryArea'),
             startBtn: document.getElementById('startBtn'),
             translateBtn: document.getElementById('translateBtn'),
             typesetBtn: document.getElementById('typesetBtn'),
-            resultArea: document.getElementById('resultArea'),
             translationArea: document.getElementById('translationArea'),
             imageViewer: document.getElementById('imageViewer'),
-            tabRaw: document.getElementById('tabRaw'),
-            tabImg: document.getElementById('tabImg'),
             overlay: document.getElementById('processingOverlay'),
             progressText: document.getElementById('progressText'),
-            chunkText: document.getElementById('chunkText'),
-            queueCount: document.getElementById('queueCount'),
-            copyBtn: document.getElementById('copyBtn'),
-            copyTransBtn: document.getElementById('copyTransBtn'),
-            downloadBtn: document.getElementById('downloadBtn'),
-            filenameInput: document.getElementById('filenameInput'),
-            clearAll: document.getElementById('clearAll'),
-            toast: document.getElementById('toast'),
-            modelSelect: document.getElementById('modelSelect'),
-            apiKeyInput: document.getElementById('apiKeyInput'),
-            rpmCount: document.getElementById('rpmCount'),
-            rpmBar: document.getElementById('rpmBar')
-        };
-
-        el.toggleSidebar.onclick = () => {
-            el.sidebar.classList.toggle('hidden');
-            if(!el.sidebar.classList.contains('hidden')) el.sidebar.classList.add('flex');
-        };
-
-        el.glossaryArea.value = localStorage.getItem('sundayComicGlossary') || '';
-        el.glossaryArea.addEventListener('input', (e) => localStorage.setItem('sundayComicGlossary', e.target.value));
-        
-        if (localStorage.getItem('sundayComicModel')) el.modelSelect.value = localStorage.getItem('sundayComicModel');
-        el.modelSelect.addEventListener('change', (e) => localStorage.setItem('sundayComicModel', e.target.value));
-
-        if (localStorage.getItem('sundayApiKey')) el.apiKeyInput.value = localStorage.getItem('sundayApiKey');
-        el.apiKeyInput.addEventListener('input', (e) => {
-            localStorage.setItem('sundayApiKey', e.target.value);
-            updateButtonStates();
-        });
-
-        el.resultArea.value = localStorage.getItem('sundayComicRawText') || '';
-        el.translationArea.value = localStorage.getItem('sundayComicTransText') || '';
-        
-        el.resultArea.addEventListener('input', (e) => {
-            localStorage.setItem('sundayComicRawText', e.target.value);
-            updateButtonStates();
-        });
-        el.translationArea.addEventListener('input', (e) => {
-            localStorage.setItem('sundayComicTransText', e.target.value);
-            updateButtonStates();
-        });
-
-        function updateButtonStates() {
-            el.startBtn.disabled = isProcessing || queue.length === 0;
-            el.translateBtn.disabled = isProcessing || el.resultArea.value.trim() === '';
-            el.typesetBtn.disabled = isProcessing || el.translationArea.value.trim() === '' || queue.length === 0;
-        }
-
-        el.tabImg.onclick = () => {
-            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
-            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
-            el.resultArea.classList.add('hidden');
-            el.imageViewer.classList.remove('hidden');
-            el.copyBtn.classList.add('hidden'); 
-        };
-        el.tabRaw.onclick = () => {
-            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
-            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
-            el.resultArea.classList.remove('hidden');
-            el.imageViewer.classList.add('hidden');
-            el.copyBtn.classList.remove('hidden'); 
+            queueCount: document.getElementById('queueCount')
         };
 
         el.fileInput.onchange = (e) => {
-            if (e.target.files.length > 0) addFiles(Array.from(e.target.files));
-        };
-        el.dropZone.ondragover = (e) => { e.preventDefault(); el.dropZone.style.borderColor = "#dc2626"; };
-        el.dropZone.ondragleave = () => { el.dropZone.style.borderColor = ""; };
-        el.dropZone.ondrop = (e) => {
-            e.preventDefault();
-            el.dropZone.style.borderColor = "";
-            if (e.dataTransfer.files.length > 0) addFiles(Array.from(e.dataTransfer.files));
-        };
-        
-        el.clearAll.onclick = () => { 
-            queue.forEach(item => URL.revokeObjectURL(item.url));
-            queue = []; 
-            speechBubbleCoordinates = [];
-            renderQueue(); 
-            el.resultArea.value = ""; 
-            el.translationArea.value = ""; 
-            localStorage.removeItem('sundayComicRawText');
-            localStorage.removeItem('sundayComicTransText');
-            updateButtonStates();
-            renderImageViewer();
-            showToast("[System] Workspace cleared.");
-        };
-
-        function addFiles(files) {
-            const newItems = files
-                .filter(file => file.type.startsWith('image/'))
-                .map(file => ({ 
-                    id: Math.random().toString(36).substr(2, 9), 
-                    file: file, 
-                    url: URL.createObjectURL(file), 
-                    status: 'pending' 
-                }));
-            queue = [...queue, ...newItems].sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true, sensitivity: 'base' }));
-            renderQueue();
-            renderImageViewer();
-            showToast(`[System] ${files.length} images queued.`);
-        }
-
-        function renderQueue() {
+            queue = Array.from(e.target.files).map(f => ({ file: f, url: URL.createObjectURL(f) }));
             el.queueCount.textContent = `Q: ${queue.length}`;
-            updateButtonStates();
-            if (queue.length === 0) {
-                el.fileQueue.innerHTML = `<div class="text-center py-4 text-zinc-600 text-[10px]">No active targets</div>`;
-                return;
-            }
-            el.fileQueue.innerHTML = queue.map((item, idx) => `
-                <div class="file-card ${item.status} py-1 px-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <span class="text-[9px] text-zinc-500">${idx+1}.</span>
-                        <p class="text-[10px] text-zinc-300 truncate">${item.file.name}</p>
-                    </div>
-                    <div class="shrink-0">
-                        ${item.status === 'processing' ? '<div class="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full"></div>' : ''}
-                        ${item.status === 'done' ? '<span class="text-[9px] text-emerald-500">OK</span>' : ''}
-                        ${item.status === 'error' ? '<span class="text-[9px] text-red-500">ERR</span>' : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderImageViewer() {
-            if (queue.length === 0) {
-                el.imageViewer.innerHTML = `<div class="text-center py-10 text-zinc-600 text-[10px] lg:text-xs">Waiting for stream...</div>`;
-                return;
-            }
-            el.imageViewer.innerHTML = queue.map((item, idx) => `
-                <div class="relative border border-zinc-800 mb-4 bg-zinc-950">
-                    <div class="absolute top-0 left-0 bg-black text-red-500 px-2 py-1 text-[9px] border-r border-b border-zinc-800 z-10">PAGE_${idx + 1}</div>
-                    <img id="render-src-${idx}" src="${item.url}" class="w-full h-auto block opacity-90 hover:opacity-100 transition-opacity">
-                </div>
-            `).join('');
-        }
-
-        let requestTimestamps = [];
-        function trackApiRequest() { requestTimestamps.push(Date.now()); updateApiUsage(); }
-        function updateApiUsage() {
-            const now = Date.now();
-            requestTimestamps = requestTimestamps.filter(t => now - t < 60000);
-            const percentage = Math.min((requestTimestamps.length / 15) * 100, 100);
-            if (el.rpmCount && el.rpmBar) {
-                el.rpmCount.textContent = `${requestTimestamps.length} / 15`;
-                el.rpmBar.style.width = `${percentage}%`;
-            }
-        }
-        setInterval(updateApiUsage, 1000);
-
-        async function apiRequest(model, payload) {
-            const apiKey = el.apiKeyInput.value.trim();
-            if(!apiKey) throw new Error("Missing Gemini API Key in the sidebar box.");
-            trackApiRequest();
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if(!res.ok) throw new Error(`Status ${res.status}: ${await res.text()}`);
-            return await res.json();
-        }
-
-        // 1. RUN OCR ENGINE
-        el.startBtn.onclick = async () => {
-            isProcessing = true;
-            updateButtonStates();
-            el.overlay.classList.remove('hidden');
-            el.resultArea.value = "";
-            speechBubbleCoordinates = [];
-
-            for (let i = 0; i < queue.length; i++) {
-                const item = queue[i];
-                item.status = 'processing';
-                renderQueue();
-                el.progressText.textContent = `RUNNING OCR [${i + 1}/${queue.length}]`;
-                
-                try {
-                    const extractedText = await processFileOCR(item.file, i);
-                    if(extractedText.trim()) {
-                        el.resultArea.value += (el.resultArea.value ? "\n\n" : "") + extractedText;
-                        localStorage.setItem('sundayComicRawText', el.resultArea.value);
-                    }
-                    item.status = 'done';
-                } catch (err) {
-                    item.status = 'error';
-                    showToast(`OCR Failed: ${err.message}`);
-                }
-                renderQueue();
-            }
-            isProcessing = false;
-            updateButtonStates();
-            el.overlay.classList.add('hidden');
-            el.tabRaw.click();
+            renderViewer();
+            updateButtons();
         };
 
-        function processFileOCR(file, index) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = URL.createObjectURL(file);
-                img.onload = async () => {
-                    let w = img.width, h = img.height;
-                    let scale = w > MAX_WIDTH ? MAX_WIDTH / w : 1;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w * scale; canvas.height = h * scale;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-                    const model = el.modelSelect.value;
-                    
-                    const prompt = `Perform OCR on this manga panel page. Return a JSON object with an array called "bubbles". Inside each item provide "text" string and "box" [ymin, xmin, ymax, xmax] layout mappings relative to the image size on a 0 to 1000 normalized grid scale.`;
-                    const payload = {
-                        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
-                        generationConfig: {
-                            temperature: 0.1, responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT", required: ["bubbles"],
-                                properties: {
-                                    bubbles: {
-                                        type: "ARRAY",
-                                        items: { type: "OBJECT", required: ["text", "box"], properties: { text: { type: "STRING" }, box: { type: "ARRAY", items: { type: "NUMBER" } } } }
-                                    }
-                                }
-                            }
-                        }
-                    };
-
-                    try {
-                        const data = await apiRequest(model, payload);
-                        const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"bubbles\":[]}";
-                        const parsed = JSON.parse(rawJson);
-                        
-                        if(parsed.bubbles) {
-                            parsed.bubbles.forEach(b => {
-                                speechBubbleCoordinates.push({
-                                    pageIndex: index,
-                                    text: b.text,
-                                    box: [
-                                        Math.round(b.box[0] * canvas.height / 1000),
-                                        Math.round(b.box[1] * canvas.width / 1000),
-                                        Math.round(b.box[2] * canvas.height / 1000),
-                                        Math.round(b.box[3] * canvas.width / 1000)
-                                    ]
-                                });
-                            });
-                            resolve(parsed.bubbles.map(b => b.text.replace(/\n/g, ' ')).join('\n\n'));
-                        } else {
-                            resolve("");
-                        }
-                    } catch(e) { reject(e); }
-                };
-            });
+        function renderViewer() {
+            el.imageViewer.innerHTML = queue.map((item, i) => `<img src="${item.url}" class="mb-4">`).join('');
         }
 
-        // 2. COMPILE TRANSLATION ENGINE
-        el.translateBtn.onclick = async () => {
-            const rawText = el.resultArea.value.trim();
-            if (!rawText) return;
-            isProcessing = true;
-            updateButtonStates();
-            el.overlay.classList.remove('hidden');
-            el.progressText.textContent = "COMPILING TRANSLATION";
+        function updateButtons() {
+            el.startBtn.disabled = isProcessing || queue.length === 0;
+            el.translateBtn.disabled = isProcessing || queue.length === 0;
+            el.typesetBtn.disabled = isProcessing || el.translationArea.value.trim() === '';
+        }
 
-            try {
-                const lines = rawText.split('\n\n').filter(l => l.trim());
-                const model = el.modelSelect.value;
-                const glossary = el.glossaryArea.value.trim();
-                
-                const systemPrompt = `You are an expert Manga Translator. Translate the given array values from English to natural, fluid Myanmar script (Burmese). Maintain a 1:1 direct array matching format.${glossary ? '\nGlossary mappings:\n' + glossary : ''}`;
-                const payload = {
-                    contents: [{ parts: [{ text: JSON.stringify(lines) }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT", required: ["translated"],
-                            properties: { translated: { type: "ARRAY", items: { type: "STRING" } } }
-                        }
-                    }
-                };
-
-                const data = await apiRequest(model, payload);
-                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"translated\":[]}";
-                const parsed = JSON.parse(rawJson);
-                
-                if (parsed.translated) {
-                    el.translationArea.value = parsed.translated.join('\n\n');
-                    localStorage.setItem('sundayComicTransText', el.translationArea.value);
-                    showToast("[Success] Translation loaded.");
-                }
-            } catch (err) {
-                showToast(`Translation Failed: ${err.message}`);
-            } finally {
-                isProcessing = false;
-                updateButtonStates();
-                el.overlay.classList.add('hidden');
-            }
-        };
-
-        // 3. TYPESET OVERLAY ENGINE (PINPOINT ACCURATE POSITION MATCHING)
+        // TYPESET ENGINE: PRECISION MASKING & DRAWING
         el.typesetBtn.onclick = async () => {
-            const finalBurmeseText = el.translationArea.value.trim();
-            if (!finalBurmeseText || queue.length === 0) return;
-
             isProcessing = true;
-            updateButtonStates();
+            updateButtons();
             el.overlay.classList.remove('hidden');
-            el.progressText.textContent = "TYPESETTING CANVAS";
+            
+            const lines = el.translationArea.value.trim().split('\n\n');
+            
+            for(let i = 0; i < queue.length; i++) {
+                const item = queue[i];
+                const bubbles = speechBubbleCoordinates.filter(b => b.pageIndex === i);
+                
+                await new Promise(resolve => {
+                    const img = new Image();
+                    img.src = item.url;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width; canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
 
-            try {
-                const translationLines = finalBurmeseText.split('\n\n').filter(l => l.trim());
-                let absoluteBubbleCounter = 0;
+                        bubbles.forEach((b, idx) => {
+                            const text = lines[idx] || b.text;
+                            const [ymin, xmin, ymax, xmax] = b.box;
+                            const bw = xmax - xmin;
+                            const bh = ymax - ymin;
 
-                for (let i = 0; i < queue.length; i++) {
-                    const item = queue[i];
-                    const pageBubbles = speechBubbleCoordinates.filter(b => b.pageIndex === i);
-                    
-                    await new Promise((resolve) => {
-                        const img = new Image();
-                        img.src = URL.createObjectURL(item.file);
-                        img.onload = () => {
-                            let w = img.width, h = img.height;
-                            let scale = w > MAX_WIDTH ? MAX_WIDTH / w : 1;
-                            
-                            const canvas = document.createElement('canvas');
-                            canvas.width = w * scale; canvas.height = h * scale;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            // 1. STEP: ERASE EXACTLY
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillRect(xmin, ymin, bw, bh);
 
-                            pageBubbles.forEach(bubble => {
-                                const burmeseText = translationLines[absoluteBubbleCounter] || bubble.text;
-                                absoluteBubbleCounter++;
+                            // 2. STEP: PREPARE FONT
+                            let fontSize = Math.max(16, bh / 2.5);
+                            ctx.font = `700 ${fontSize}px 'Padauk', sans-serif`;
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "top"; // Forces anchor to ymin
 
-                                let [ymin, xmin, ymax, xmax] = bubble.box;
-                                let bw = xmax - xmin;
-                                let bh = ymax - ymin;
-                                
-                                // 1. Erase only the bounding area enclosing the english text
-                                ctx.fillStyle = "#FFFFFF";
-                                ctx.fillRect(xmin, ymin, bw, bh);
-
-                                // 2. Compute dynamic font constraints matching original box width
-                                let fontSize = Math.max(12, Math.min(bw / 6.5, 18)); 
-                                ctx.font = `700 ${fontSize}px 'Padauk', sans-serif`;
-                                ctx.textAlign = "center";
-                                ctx.textBaseline = "top";
-
-                                // 3. Compute dynamic wrapping lines within text container width
-                                const words = burmeseText.split(/(\s+|၊|။)/).filter(Boolean);
-                                let lines = [];
-                                let currentLine = "";
-
-                                for (let n = 0; n < words.length; n++) {
-                                    let testLine = currentLine + words[n];
-                                    if (ctx.measureText(testLine).width > bw && currentLine !== "") {
-                                        lines.push(currentLine.trim());
-                                        currentLine = words[n];
-                                    } else {
-                                        currentLine = testLine;
-                                    }
-                                }
-                                if (currentLine) lines.push(currentLine.trim());
-
-                                // 4. Balance text block spacing directly inside original layout position
-                                let lineHeight = fontSize * 1.4;
-                                let totalTextHeight = lines.length * lineHeight;
-                                let startY = ymin + (bh - totalTextHeight) / 2; 
-
-                                // 5. Render precisely inside target location bounds
-                                lines.forEach((line, index) => {
-                                    let lineY = startY + (index * lineHeight);
-                                    
-                                    ctx.strokeStyle = "#FFFFFF";
-                                    ctx.lineWidth = 3;
-                                    ctx.strokeText(line, xmin + bw / 2, lineY);
-                                    
-                                    ctx.fillStyle = "#000000";
-                                    ctx.fillText(line, xmin + bw / 2, lineY);
-                                });
+                            // 3. STEP: WRAP
+                            const words = text.split(' ');
+                            let linesArr = [], cur = "";
+                            words.forEach(w => {
+                                if(ctx.measureText(cur + w).width > bw) { linesArr.push(cur); cur = w + " "; }
+                                else cur += w + " ";
                             });
+                            linesArr.push(cur);
 
-                            canvas.toBlob((blob) => {
-                                URL.revokeObjectURL(item.url);
-                                item.url = URL.createObjectURL(blob);
-                                resolve();
-                            }, 'image/jpeg', 0.95);
-                        };
-                    });
-                }
+                            // 4. STEP: CENTER VERTICALLY
+                            let lineHeight = fontSize * 1.2;
+                            let startY = ymin + (bh - (linesArr.length * lineHeight)) / 2;
 
-                renderImageViewer();
-                el.tabImg.click();
-                showToast("[Success] Typeset compilation complete!");
-            } catch (err) {
-                showToast("Typeset Failed.");
-                console.error(err);
-            } final {
-                isProcessing = false;
-                updateButtonStates();
-                el.overlay.classList.add('hidden');
+                            // 5. STEP: DRAW
+                            linesArr.forEach((line, lIdx) => {
+                                ctx.fillStyle = "#000000";
+                                ctx.fillText(line, xmin + bw/2, startY + (lIdx * lineHeight));
+                            });
+                        });
+                        
+                        item.url = canvas.toDataURL('image/jpeg', 0.95);
+                        resolve();
+                    };
+                });
             }
+            renderViewer();
+            el.overlay.classList.add('hidden');
+            isProcessing = false;
+            updateButtons();
         };
-
-        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(/(\s+|၊|။)/).filter(Boolean);
-            let lines = [];
-            let currentLine = "";
-
-            for (let n = 0; n < words.length; n++) {
-                let testLine = currentLine + words[n];
-                if (ctx.measureText(testLine).width > maxWidth && currentLine !== "") {
-                    lines.push(currentLine.trim());
-                    currentLine = words[n];
-                } else {
-                    currentLine = testLine;
-                }
-            }
-            if (currentLine) {
-                lines.push(currentLine.trim());
-            }
-
-            let startY = y - ((lines.length - 1) * lineHeight) / 2;
-            for (let k = 0; k < lines.length; k++) {
-                ctx.strokeStyle = "#FFFFFF";
-                ctx.lineWidth = 4;
-                ctx.strokeText(lines[k], x, startY + (k * lineHeight));
-                ctx.fillText(lines[k], x, startY + (k * lineHeight));
-            }
-        }
-
-        el.downloadBtn.onclick = () => {
-            const text = el.translationArea.value.trim();
-            if (!text) return;
-            let title = el.filenameInput.value.trim() || "Chapter";
-            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = title.endsWith(".txt") ? title : title + ".txt";
-            a.click(); URL.revokeObjectURL(url);
-        };
-
-        function copyToClipboard(text, msg) {
-            navigator.clipboard.writeText(text).then(() => showToast(msg));
-        }
-        el.copyBtn.onclick = () => copyToClipboard(el.resultArea.value, "RAW data copied.");
-        el.copyTransBtn.onclick = () => copyToClipboard(el.translationArea.value, "Myanmar translation copied.");
-
-        function showToast(msg) {
-            el.toast.textContent = msg;
-            el.toast.classList.remove('translate-y-32');
-            setTimeout(() => el.toast.classList.add('translate-y-32'), 3000);
-        }
-        
-        updateButtonStates();
     </script>
 </body>
 </html>
