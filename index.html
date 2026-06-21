@@ -144,10 +144,11 @@
         
         <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-4 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
             
+            <!-- FIXED: Input is completely outside the clickable dropZone area to prevent event bubbling blocks -->
             <div id="dropZone" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
                 <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors"><span class="text-red-600">></span> upload_images.sh</p>
-                <input type="file" id="fileInput" class="hidden" accept="image/*" multiple>
             </div>
+            <input type="file" id="fileInput" class="hidden" accept="image/*" multiple>
 
             <div class="flex flex-col gap-1 shrink-0">
                 <div class="flex justify-between items-center pb-1 border-b border-zinc-800">
@@ -330,8 +331,33 @@
             el.copyBtn.classList.remove('hidden'); 
         };
 
-        el.dropZone.onclick = () => el.fileInput.click();
-        el.fileInput.onchange = (e) => addFiles(Array.from(e.target.files));
+        // FIXED UPLOAD HANDLERS (No event looping, includes complete Drag & Drop support)
+        el.dropZone.onclick = () => {
+            el.fileInput.click();
+        };
+
+        el.fileInput.onchange = (e) => {
+            if (e.target.files.length > 0) {
+                addFiles(Array.from(e.target.files));
+            }
+        };
+
+        el.dropZone.ondragover = (e) => {
+            e.preventDefault();
+            el.dropZone.style.borderColor = "#dc2626";
+        };
+
+        el.dropZone.ondragleave = () => {
+            el.dropZone.style.borderColor = "";
+        };
+
+        el.dropZone.ondrop = (e) => {
+            e.preventDefault();
+            el.dropZone.style.borderColor = "";
+            if (e.dataTransfer.files.length > 0) {
+                addFiles(Array.from(e.dataTransfer.files));
+            }
+        };
         
         el.clearAll.onclick = () => { 
             queue.forEach(item => URL.revokeObjectURL(item.url));
@@ -648,6 +674,7 @@
             return { translation: cleanedTranslation, newTerms: parsedResult.newTerms || "NONE" };
         }
 
+        // FIXED TYPESETTER ENGINE (Bypasses GitHub hosting cross-origin Canvas protection walls)
         el.typesetBtn.onclick = async () => {
             const finalBurmeseText = el.translationArea.value.trim();
             if (!finalBurmeseText) return;
@@ -659,7 +686,7 @@
             isProcessing = true;
             el.overlay.classList.remove('hidden');
             el.progressText.textContent = "TYPESETTING_LAYOUTS";
-            el.chunkText.textContent = "> Executing Client-Side Canvas Engine...";
+            el.chunkText.textContent = "> Executing Secure Client-Side Canvas Engine...";
 
             try {
                 const burmeseLines = finalBurmeseText.split('\n\n').filter(l => l.trim().length > 0);
@@ -668,9 +695,11 @@
                     const item = queue[i];
                     const pageBubbles = speechBubbleCoordinates.filter(b => b.pageIndex === i);
                     
-                    await new Promise((resolve) => {
+                    await new Promise((resolve, reject) => {
                         const img = new Image();
+                        img.crossOrigin = "anonymous"; 
                         img.src = item.url;
+                        
                         img.onload = () => {
                             let origWidth = img.width;
                             let scale = origWidth > MAX_WIDTH ? MAX_WIDTH / origWidth : 1;
@@ -703,13 +732,23 @@
                                 wrapText(ctx, currentText, xmin + w/2, ymin + h/2, w - 10, fontSize + 4);
                             });
 
-                            canvas.toBlob((blob) => {
-                                const newUrl = URL.createObjectURL(blob);
-                                URL.revokeObjectURL(item.url);
-                                item.url = newUrl;
+                            try {
+                                canvas.toBlob((blob) => {
+                                    if (!blob) {
+                                        reject(new Error("Canvas layout broken"));
+                                        return;
+                                    }
+                                    const newUrl = URL.createObjectURL(blob);
+                                    item.url = newUrl;
+                                    resolve();
+                                }, 'image/jpeg', 0.9);
+                            } catch (canvasError) {
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                                item.url = dataUrl;
                                 resolve();
-                            }, 'image/jpeg', 0.9);
+                            }
                         };
+                        img.onerror = () => reject("Target image load failure");
                     });
                 }
 
@@ -719,7 +758,7 @@
 
             } catch (err) {
                 console.error("Typesetting Fault:", err);
-                showToast("[Error] Typesetting process encountered a layout error.");
+                showToast("[Error] Typesetting process encountered a security layout error.");
             } finally {
                 isProcessing = false;
                 el.overlay.classList.add('hidden');
