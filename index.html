@@ -247,24 +247,20 @@ let rawJson = "";
         // --- TYPESETTING FUNCTION အသစ် ---
 async function runTypesetProcess() {
     try {
-        // AI ဆီကရထားတဲ့ JSON ကို 'rawJson' ဆိုတဲ့ variable ထဲကနေ ဖတ်ယူမယ်
-        // (အကယ်၍ မင်းရဲ့ compiler ထဲမှာ variable နာမည်က တခြားနာမည်ဖြစ်နေရင် အဲ့ဒီနာမည်ကိုပဲ သုံးပါ)
-        const jsonData = JSON.parse(rawJson); 
+        if (!rawJson) throw new Error("JSON is empty");
+        const jsonData = JSON.parse(rawJson);
         
-        console.log("Typesetting started for:", jsonData);
-
-        // Coordinates တွေကို loop ပတ်ပြီး ပုံပေါ်မှာ စာတင်မယ့် logic ကို ဒီမှာ ဆက်ရေးရမယ်
         jsonData.coordinates.forEach((box, index) => {
             const translatedText = jsonData.translatedBubbles[index];
-            console.log(Processing Box ${index}: Text: ${translatedText}, Location: ${box.x}, ${box.y});
+            console.log(Rendering: ${translatedText} at ${box.x}, ${box.y});
         });
-
-        alert("Typesetting process အလုပ်လုပ်နေပါပြီ!");
+        
+        alert("Process completed!");
     } catch (e) {
-        alert("Error: COMPILE_MYANMAR.SH ကို အရင်နှိပ်ပြီး JSON Data အရင်ယူပါ");
-        console.error("Typesetting error:", e);
+        alert("Error: " + e.message);
     }
 }
+
         const apiKey = "AQ.Ab8RN6JxYziMKDzXco_yPTUZO9Wth8bJx1GHY5JKNZFKNPx19w"; // Environment provided fallback
         const MAX_STRIP_HEIGHT = 2000; 
         const MAX_WIDTH = 1200; 
