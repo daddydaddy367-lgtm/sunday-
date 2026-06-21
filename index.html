@@ -576,7 +576,7 @@
             }
         };
 
-        // 3. TYPESET OVERLAY ENGINE (PINPOINT ACCURATE MASKING OVER TEXT ONLY)
+        // 3. TYPESET OVERLAY ENGINE (PINPOINT ACCURATE POSITION MATCHING)
         el.typesetBtn.onclick = async () => {
             const finalBurmeseText = el.translationArea.value.trim();
             if (!finalBurmeseText || queue.length === 0) return;
@@ -611,22 +611,51 @@
                                 absoluteBubbleCounter++;
 
                                 let [ymin, xmin, ymax, xmax] = bubble.box;
-                                let bw = xmax - xmin, bh = ymax - ymin;
+                                let bw = xmax - xmin;
+                                let bh = ymax - ymin;
                                 
-                                // FIX: Targets ONLY the precise box bounding the original English text block.
-                                // It covers ONLY the internal text layout area, completely saving the bubble lines!
+                                // 1. Erase only the bounding area enclosing the english text
                                 ctx.fillStyle = "#FFFFFF";
                                 ctx.fillRect(xmin, ymin, bw, bh);
 
-                                // Font setup configuration
-                                ctx.fillStyle = "#000000";
-                                let size = Math.max(11, Math.min(bw / 6.5, 18)); 
-                                ctx.font = `700 ${size}px 'Padauk', sans-serif`;
+                                // 2. Compute dynamic font constraints matching original box width
+                                let fontSize = Math.max(12, Math.min(bw / 6.5, 18)); 
+                                ctx.font = `700 ${fontSize}px 'Padauk', sans-serif`;
                                 ctx.textAlign = "center";
-                                ctx.textBaseline = "middle";
+                                ctx.textBaseline = "top";
 
-                                // Wrap layout delivery inside bounds safely
-                                wrapText(ctx, burmeseText, xmin + bw/2, ymin + bh/2, bw, size * 1.55);
+                                // 3. Compute dynamic wrapping lines within text container width
+                                const words = burmeseText.split(/(\s+|၊|။)/).filter(Boolean);
+                                let lines = [];
+                                let currentLine = "";
+
+                                for (let n = 0; n < words.length; n++) {
+                                    let testLine = currentLine + words[n];
+                                    if (ctx.measureText(testLine).width > bw && currentLine !== "") {
+                                        lines.push(currentLine.trim());
+                                        currentLine = words[n];
+                                    } else {
+                                        currentLine = testLine;
+                                    }
+                                }
+                                if (currentLine) lines.push(currentLine.trim());
+
+                                // 4. Balance text block spacing directly inside original layout position
+                                let lineHeight = fontSize * 1.4;
+                                let totalTextHeight = lines.length * lineHeight;
+                                let startY = ymin + (bh - totalTextHeight) / 2; 
+
+                                // 5. Render precisely inside target location bounds
+                                lines.forEach((line, index) => {
+                                    let lineY = startY + (index * lineHeight);
+                                    
+                                    ctx.strokeStyle = "#FFFFFF";
+                                    ctx.lineWidth = 3;
+                                    ctx.strokeText(line, xmin + bw / 2, lineY);
+                                    
+                                    ctx.fillStyle = "#000000";
+                                    ctx.fillText(line, xmin + bw / 2, lineY);
+                                });
                             });
 
                             canvas.toBlob((blob) => {
@@ -643,7 +672,8 @@
                 showToast("[Success] Typeset compilation complete!");
             } catch (err) {
                 showToast("Typeset Failed.");
-            } finally {
+                console.error(err);
+            } final {
                 isProcessing = false;
                 updateButtonStates();
                 el.overlay.classList.add('hidden');
@@ -673,7 +703,6 @@
                 ctx.strokeStyle = "#FFFFFF";
                 ctx.lineWidth = 4;
                 ctx.strokeText(lines[k], x, startY + (k * lineHeight));
-                
                 ctx.fillText(lines[k], x, startY + (k * lineHeight));
             }
         }
