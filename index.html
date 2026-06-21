@@ -242,8 +242,29 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
-
+let rawJson = "";
     <script>
+        // --- TYPESETTING FUNCTION အသစ် ---
+async function runTypesetProcess() {
+    try {
+        // AI ဆီကရထားတဲ့ JSON ကို 'rawJson' ဆိုတဲ့ variable ထဲကနေ ဖတ်ယူမယ်
+        // (အကယ်၍ မင်းရဲ့ compiler ထဲမှာ variable နာမည်က တခြားနာမည်ဖြစ်နေရင် အဲ့ဒီနာမည်ကိုပဲ သုံးပါ)
+        const jsonData = JSON.parse(rawJson); 
+        
+        console.log("Typesetting started for:", jsonData);
+
+        // Coordinates တွေကို loop ပတ်ပြီး ပုံပေါ်မှာ စာတင်မယ့် logic ကို ဒီမှာ ဆက်ရေးရမယ်
+        jsonData.coordinates.forEach((box, index) => {
+            const translatedText = jsonData.translatedBubbles[index];
+            console.log(Processing Box ${index}: Text: ${translatedText}, Location: ${box.x}, ${box.y});
+        });
+
+        alert("Typesetting process အလုပ်လုပ်နေပါပြီ!");
+    } catch (e) {
+        alert("Error: COMPILE_MYANMAR.SH ကို အရင်နှိပ်ပြီး JSON Data အရင်ယူပါ");
+        console.error("Typesetting error:", e);
+    }
+}
         const apiKey = "AQ.Ab8RN6JxYziMKDzXco_yPTUZO9Wth8bJx1GHY5JKNZFKNPx19w"; // Environment provided fallback
         const MAX_STRIP_HEIGHT = 2000; 
         const MAX_WIDTH = 1200; 
@@ -670,12 +691,13 @@
                 }
             };
             const data = await fetchWithBackoff(model, payload);
-            const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}"; 
             let parsedResult = {};
             try {
                 parsedResult = JSON.parse(rawJson);
-            } catch(e) { throw new Error("JSON Parse Error"); }
-
+            } catch(e) { 
+            throw new Error("JSON Parse Error"); 
+            }
             let transArray = parsedResult.translatedBubbles || [];
             let terms = parsedResult.newTerms || "NONE";
 
