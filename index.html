@@ -23,7 +23,7 @@
             font-family: 'Fira Code', monospace; 
             background-color: var(--term-black); 
             color: var(--term-text); 
-            background-image: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(20, 20, 20, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-image: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(20, 20, 20, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
             background-size: 100% 4px, 3px 100%;
         }
 
@@ -142,7 +142,7 @@
 
     <main class="flex-1 flex flex-row main-content overflow-hidden relative">
         
-        <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-3 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
+        <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-4 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
             
             <div id="dropZone" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
                 <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors"><span class="text-red-600">></span> upload_images.sh</p>
@@ -154,17 +154,17 @@
                     <h3 class="text-[10px] uppercase text-zinc-500">Workspace</h3>
                     <button id="clearAll" class="text-[9px] hover:text-red-500 transition-colors">rm -rf /</button>
                 </div>
-                <div id="fileQueue" class="space-y-0 overflow-y-auto max-h-28 custom-scrollbar">
+                <div id="fileQueue" class="space-y-0 overflow-y-auto max-h-32 custom-scrollbar">
                     <div class="text-center py-4 text-zinc-600 text-[10px]">No active targets</div>
                 </div>
             </div>
 
             <div class="flex flex-col gap-1 shrink-0">
                 <h3 class="text-[10px] uppercase text-red-500 border-b border-zinc-800 pb-1">dict.json (Glossary)</h3>
-                <textarea id="glossaryArea" class="w-full h-20 p-2 text-[10px] custom-scrollbar" placeholder="Character Name = ဘာသာပြန်အမည်"></textarea>
+                <textarea id="glossaryArea" class="w-full h-24 p-2 text-[10px] custom-scrollbar" placeholder="Character Name = ဘာသာပြန်အမည်"></textarea>
             </div>
 
-            <div class="flex flex-col gap-2 shrink-0">
+            <div class="flex flex-col gap-2 mt-2 shrink-0">
                 <button id="startBtn" class="code-btn py-1.5 lg:py-2 text-[10px] lg:text-xs" disabled>
                     ./run_ocr.sh
                 </button>
@@ -176,20 +176,14 @@
                 </button>
             </div>
 
-            <div class="shrink-0">
-                <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL (PRO NEEDS CUSTOM KEY)</label>
+            <div class="pt-2 shrink-0">
+                <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL</label>
                 <select id="modelSelect" class="w-full p-2 text-[10px] lg:text-xs">
-                    <option value="gemini-2.5-pro">Gemini 3.5 Pro (Ultimate Quality)</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash Preview</option>
                 </select>
             </div>
 
-            <div class="shrink-0">
-                <label class="block text-[9px] uppercase text-zinc-500 mb-1">ENV_VAR: GEMINI_API_KEY</label>
-                <input type="password" id="apiKeyInput" class="w-full p-2 text-[10px] lg:text-xs" placeholder="[Environment Provided]">
-            </div>
-
-            <div class="mt-auto pt-2 shrink-0 border-t border-zinc-800 bg-[#0a0a0a] p-2">
+            <div class="mt-2 shrink-0 border border-zinc-800 p-2 bg-[#0a0a0a]">
                 <div class="flex justify-between items-center mb-1">
                     <span class="text-[9px] uppercase text-zinc-500">RPM Load (Est)</span>
                     <span id="rpmCount" class="text-[9px] text-emerald-500 font-bold">0 / 15</span>
@@ -206,10 +200,10 @@
                 <div class="w-1/2 flex flex-col gap-1 lg:gap-2 h-full relative">
                     <div class="flex gap-1 h-6 lg:h-8 shrink-0">
                         <button id="tabImg" class="px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center">
-                            <span>viewer.exe</span>
+                            <span class="hidden sm:inline">viewer.exe</span><span class="sm:hidden">IMG</span>
                         </button>
                         <button id="tabRaw" class="px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center">
-                            <span>raw_data.txt</span>
+                            <span class="hidden sm:inline">raw_data.txt</span><span class="sm:hidden">RAW</span>
                         </button>
                         <div class="flex-1 border-b border-zinc-800"></div>
                         <button id="copyBtn" class="px-2 lg:px-3 text-zinc-400 hover:text-red-500 hidden border-b border-zinc-800" title="Copy">
@@ -227,7 +221,7 @@
 
                 <div class="w-1/2 flex flex-col gap-1 lg:gap-2 h-full">
                     <div class="flex justify-between items-end h-6 lg:h-8 shrink-0 border-b border-zinc-800 pb-1">
-                        <h2 class="text-[10px] lg:text-xs text-red-500 pl-1 lg:pl-2 truncate">output.txt</h2>
+                        <h2 class="text-[10px] lg:text-xs text-red-500 pl-1 lg:pl-2 truncate w-16 lg:w-auto">output.txt</h2>
                         <div class="flex gap-1 lg:gap-2">
                             <input type="text" id="filenameInput" class="px-1 lg:px-2 h-5 lg:h-6 w-12 lg:w-24 text-[8px] lg:text-[10px] focus:outline-none bg-black border border-zinc-800" placeholder="filename" value="Chapter">
                             <button id="copyTransBtn" class="text-zinc-400 hover:text-red-500 px-1 lg:px-2 text-[8px] lg:text-[10px]">COPY</button>
@@ -242,7 +236,7 @@
                 <div class="loader"></div>
                 <div class="text-center font-mono">
                     <p id="progressText" class="text-red-500 text-[10px] lg:text-sm">EXECUTING</p>
-                    <p id="chunkText" class="text-[8px] lg:text-[10px] text-zinc-500 mt-1">> Initializing pipelines...</p>
+                    <p id="chunkText" class="text-[8px] lg:text-[10px] text-zinc-500 mt-1">> Establishing secure connection...</p>
                 </div>
             </div>
         </section>
@@ -251,12 +245,12 @@
     <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
 
     <script>
-        const BACKEND_URL = "/api/typeset"; // Direct hook to your local script/container endpoint
+        const apiKey = "YOUR_GEMINI_API_KEY_HERE"; 
         const MAX_STRIP_HEIGHT = 2000; 
         const MAX_WIDTH = 1200; 
         let queue = [];
         let isProcessing = false;
-        let trackedOcrMetadata = []; // Preserves spatial context array [ymin, xmin, ymax, xmax] for backend sync
+        let speechBubbleCoordinates = []; 
 
         const el = {
             sidebar: document.getElementById('sidebar'),
@@ -265,7 +259,6 @@
             dropZone: document.getElementById('dropZone'),
             fileQueue: document.getElementById('fileQueue'),
             glossaryArea: document.getElementById('glossaryArea'),
-            apiKeyInput: document.getElementById('apiKeyInput'),
             startBtn: document.getElementById('startBtn'),
             translateBtn: document.getElementById('translateBtn'),
             typesetBtn: document.getElementById('typesetBtn'),
@@ -289,7 +282,6 @@
             rpmBar: document.getElementById('rpmBar')
         };
 
-        // Mobile Responsive Toggle
         el.toggleSidebar.onclick = () => {
             if (el.sidebar.classList.contains('hidden')) {
                 el.sidebar.classList.remove('hidden');
@@ -300,7 +292,6 @@
             }
         };
 
-        // Persistent Workspace Initialization
         el.glossaryArea.value = localStorage.getItem('sundayComicGlossary') || '';
         el.glossaryArea.addEventListener('input', (e) => localStorage.setItem('sundayComicGlossary', e.target.value));
         
@@ -308,11 +299,6 @@
             el.modelSelect.value = localStorage.getItem('sundayComicModel');
         }
         el.modelSelect.addEventListener('change', (e) => localStorage.setItem('sundayComicModel', e.target.value));
-
-        if (localStorage.getItem('sundayApiKey')) {
-            el.apiKeyInput.value = localStorage.getItem('sundayApiKey');
-        }
-        el.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('sundayApiKey', e.target.value));
 
         el.resultArea.value = localStorage.getItem('sundayComicRawText') || '';
         el.translationArea.value = localStorage.getItem('sundayComicTransText') || '';
@@ -328,42 +314,38 @@
             el.typesetBtn.disabled = e.target.value.trim() === '';
         });
 
-        // Interactive Workspace Tab Controller
         el.tabImg.onclick = () => {
-            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs flex items-center justify-center";
-            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 flex items-center justify-center";
+            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
+            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
             el.resultArea.classList.add('hidden');
             el.imageViewer.classList.remove('hidden');
             el.copyBtn.classList.add('hidden'); 
             renderImageViewer();
         };
         el.tabRaw.onclick = () => {
-            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs flex items-center justify-center";
-            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 flex items-center justify-center";
+            el.tabRaw.className = "px-2 lg:px-4 border border-zinc-800 bg-zinc-900 text-red-500 text-[10px] lg:text-xs transition-colors flex items-center justify-center";
+            el.tabImg.className = "px-2 lg:px-4 border border-zinc-800 bg-black text-zinc-400 text-[10px] lg:text-xs hover:bg-zinc-900 transition-colors flex items-center justify-center";
             el.resultArea.classList.remove('hidden');
             el.imageViewer.classList.add('hidden');
             el.copyBtn.classList.remove('hidden'); 
         };
 
-        // File Handler Pipelines
         el.dropZone.onclick = () => el.fileInput.click();
         el.fileInput.onchange = (e) => addFiles(Array.from(e.target.files));
         
         el.clearAll.onclick = () => { 
             queue.forEach(item => URL.revokeObjectURL(item.url));
             queue = []; 
-            trackedOcrMetadata = [];
+            speechBubbleCoordinates = [];
             renderQueue(); 
-            
             el.resultArea.value = ""; 
             el.translationArea.value = ""; 
             localStorage.removeItem('sundayComicRawText');
             localStorage.removeItem('sundayComicTransText');
-            
             el.translateBtn.disabled = true; 
             el.typesetBtn.disabled = true;
             renderImageViewer();
-            showToast("[System] Workspace cleared successfully.");
+            showToast("[System] Workspace memory wiped.");
         };
 
         function addFiles(files) {
@@ -378,7 +360,7 @@
             queue = [...queue, ...newItems].sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true, sensitivity: 'base' }));
             renderQueue();
             renderImageViewer();
-            showToast(`[System] Attached ${files.length} payloads to queue.`);
+            showToast(`[System] ${files.length} payload(s) loaded.`);
             if(window.innerWidth < 1024) el.sidebar.classList.add('hidden');
         }
 
@@ -410,5 +392,404 @@
                 return;
             }
             el.imageViewer.innerHTML = queue.map((item, idx) => `
-                <div class="relative border border-zinc-800 bg-zinc-950">
-                    <div class="absolute top-0 left-0 bg-black text-red-500
+                <div class="relative border border-zinc-800 mb-2 lg:mb-4 bg-zinc-950">
+                    <div class="absolute top-0 left-0 bg-black text-red-500 px-2 py-1 text-[9px] border-r border-b border-zinc-800 z-10">ID: PAGE_${idx + 1}</div>
+                    <img id="render-src-${idx}" src="${item.url}" class="w-full h-auto block opacity-80 hover:opacity-100 transition-opacity">
+                </div>
+            `).join('');
+        }
+
+        const FREE_RPM_LIMIT = 15;
+        let requestTimestamps = [];
+
+        function trackApiRequest() {
+            requestTimestamps.push(Date.now());
+            updateApiUsage();
+        }
+
+        function updateApiUsage() {
+            const now = Date.now();
+            requestTimestamps = requestTimestamps.filter(t => now - t < 60000);
+            const currentRpm = requestTimestamps.length;
+            const percentage = Math.min((currentRpm / FREE_RPM_LIMIT) * 100, 100);
+            
+            if (el.rpmCount && el.rpmBar) {
+                el.rpmCount.textContent = `${currentRpm} / ${FREE_RPM_LIMIT}`;
+                el.rpmBar.style.width = `${percentage}%`;
+                if (percentage < 50) {
+                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300";
+                    el.rpmCount.className = "text-[9px] text-emerald-500 font-bold";
+                } else if (percentage < 80) {
+                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-yellow-500 transition-all duration-300";
+                    el.rpmCount.className = "text-[9px] text-yellow-500 font-bold";
+                } else {
+                    el.rpmBar.className = "absolute top-0 left-0 h-full bg-red-500 shadow-[0_0_8px_rgba(220,38,38,0.6)] transition-all duration-300";
+                    el.rpmCount.className = "text-[9px] text-red-500 font-bold animate-pulse";
+                }
+            }
+        }
+        setInterval(updateApiUsage, 1000);
+
+        async function fetchWithBackoff(model, payload) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < 6; i++) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    trackApiRequest();
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        throw new Error(`API Error: ${res.status} - ${errText}`);
+                    }
+                    return await res.json();
+                } catch (e) {
+                    if (i === 5) throw e;
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+
+        el.startBtn.onclick = async () => {
+            isProcessing = true;
+            renderQueue();
+            el.overlay.classList.remove('hidden');
+            if(el.resultArea.value.trim() === "") el.resultArea.value = "";
+            speechBubbleCoordinates = []; 
+
+            for (let i = 0; i < queue.length; i++) {
+                const item = queue[i];
+                if (item.status === 'done') continue;
+                item.status = 'processing';
+                renderQueue();
+                el.progressText.textContent = `EXTRACTING_DATA [${i + 1}/${queue.length}]`;
+                try {
+                    const text = await processSingleFile(item.file, i);
+                    if(text.trim()) {
+                        el.resultArea.value += (el.resultArea.value ? "\n\n" : "") + text;
+                        localStorage.setItem('sundayComicRawText', el.resultArea.value);
+                    }
+                    item.status = 'done';
+                } catch (err) {
+                    console.error("OCR Error:", err);
+                    item.status = 'error';
+                }
+                renderQueue();
+                el.resultArea.scrollTop = el.resultArea.scrollHeight;
+            }
+            isProcessing = false;
+            el.overlay.classList.add('hidden');
+            if(el.resultArea.value.trim().length > 0) el.translateBtn.disabled = false;
+            renderQueue();
+            showToast("[Success] OCR sequence complete.");
+            el.tabRaw.click();
+        };
+
+        async function processSingleFile(file, pageIndex) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                img.onload = async () => {
+                    let { width, height } = img;
+                    let scale = width > MAX_WIDTH ? MAX_WIDTH / width : 1;
+                    const drawWidth = width * scale;
+                    const drawHeight = height * scale;
+                    const chunksCount = Math.ceil(drawHeight / MAX_STRIP_HEIGHT);
+                    let combinedTextParts = [];
+
+                    for (let c = 0; c < chunksCount; c++) {
+                        el.chunkText.textContent = `> Processing segment ${c + 1}/${chunksCount}...`;
+                        const chunkCanvasH = Math.min(MAX_STRIP_HEIGHT, drawHeight - (c * MAX_STRIP_HEIGHT));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = drawWidth;
+                        canvas.height = chunkCanvasH;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, (c * MAX_STRIP_HEIGHT) / scale, width, chunkCanvasH / scale, 0, 0, drawWidth, chunkCanvasH);
+                        const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                        try {
+                            const result = await callGeminiOCR(base64, pageIndex, c, chunkCanvasH, drawWidth);
+                            if (result && result.trim()) combinedTextParts.push(result.trim());
+                        } catch (e) {
+                            console.error("Chunk failed", e);
+                            combinedTextParts.push(`[SYSTEM ERROR: Chunk failed to process]`);
+                        }
+                        if (c < chunksCount - 1) await new Promise(r => setTimeout(r, 1200));
+                    }
+                    URL.revokeObjectURL(img.src);
+                    resolve(combinedTextParts.join("\n\n"));
+                };
+                img.onerror = () => reject("Load failed");
+            });
+        }
+
+        async function callGeminiOCR(base64, pageIndex, chunkIndex, chunkHeight, canvasWidth) {
+            const model = el.modelSelect.value || 'gemini-2.5-flash-preview-09-2025';
+            const prompt = `Perform highly accurate OCR on this manga/comic layout. Return a JSON object containing an array called "bubbles". Each bubble element MUST be an object containing "text" (the transcription string) and "box" [ymin, xmin, ymax, xmax] coordinates localized inside the panel space (normalized 0-1000 bounds). Maintain strict reading sequence orders.`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                generationConfig: {
+                    temperature: 0.1, 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            bubbles: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        text: { type: "STRING" },
+                                        box: { type: "ARRAY", items: { type: "NUMBER" } }
+                                    },
+                                    required: ["text", "box"]
+                                }
+                            }
+                        },
+                        required: ["bubbles"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchWithBackoff(model, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{\"bubbles\":[]}";
+                let parsed = JSON.parse(rawJson);
+                if (parsed.bubbles) {
+                    parsed.bubbles.forEach(b => {
+                        let globalYmin = Math.round(((chunkIndex * MAX_STRIP_HEIGHT) + (b.box[0] * chunkHeight / 1000)));
+                        let globalYmax = Math.round(((chunkIndex * MAX_STRIP_HEIGHT) + (b.box[2] * chunkHeight / 1000)));
+                        let globalXmin = Math.round((b.box[1] * canvasWidth / 1000));
+                        let globalXmax = Math.round((b.box[3] * canvasWidth / 1000));
+
+                        speechBubbleCoordinates.push({
+                            pageIndex: pageIndex,
+                            text: b.text,
+                            box: [globalYmin, globalXmin, globalYmax, globalXmax]
+                        });
+                    });
+                    return parsed.bubbles.map(b => b.text.replace(/\n/g, ' ').trim()).filter(t => t.length > 0).join('\n\n');
+                }
+                return "";
+            } catch (e) {
+                console.error("Coordinates gathering error", e);
+                return "";
+            }
+        }
+
+        el.translateBtn.onclick = async () => {
+            const rawText = el.resultArea.value.trim();
+            if (!rawText) return;
+            isProcessing = true;
+            el.overlay.classList.remove('hidden');
+            el.progressText.textContent = "COMPILING_MYANMAR";
+            el.chunkText.textContent = "> Injecting glossary definitions...";
+
+            try {
+                const inputArray = rawText.split('\n\n').filter(l => l.trim().length > 0);
+                const translationData = await callGeminiTranslate(inputArray);
+                el.translationArea.value = translationData.translation;
+                localStorage.setItem('sundayComicTransText', el.translationArea.value);
+                el.typesetBtn.disabled = false;
+                
+                if (translationData.newTerms && translationData.newTerms.toUpperCase() !== "NONE") {
+                    const currentGlossary = el.glossaryArea.value.trim();
+                    const existingLines = currentGlossary.toLowerCase().split('\n');
+                    const termsToAdd = translationData.newTerms.split('\n')
+                        .filter(t => t.includes('=') && !existingLines.some(el => el.includes(t.split('=')[0].trim().toLowerCase())))
+                        .join('\n');
+
+                    if (termsToAdd) {
+                        el.glossaryArea.value = currentGlossary ? currentGlossary + '\n' + termsToAdd : termsToAdd;
+                        localStorage.setItem('sundayComicGlossary', el.glossaryArea.value);
+                        showToast("[System] dict.json updated automatically.");
+                    }
+                } else {
+                     showToast("[Success] Build compiled. Ready for final tuning and typesetting.");
+                }
+            } catch (err) {
+                console.error("Translation Error:", err);
+                showToast("[Error] Compilation failed.");
+            } finally {
+                isProcessing = false;
+                el.overlay.classList.add('hidden');
+            }
+        };
+
+        async function callGeminiTranslate(inputArray) {
+            const model = el.modelSelect.value || 'gemini-2.5-flash-preview-09-2025';
+            const currentGlossary = el.glossaryArea.value.trim();
+            const glossaryInstruction = currentGlossary ? `\nMANDATORY GLOSSARY:\n${currentGlossary}` : "";
+            const systemPrompt = `You are an elite Manga Localizer. Translate from English to natural, fluid Myanmar (Burmese). Map strictly 1-to-1 inside the array fields.${glossaryInstruction}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: JSON.stringify(inputArray) }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            translatedBubbles: { type: "ARRAY", items: { type: "STRING" } },
+                            newTerms: { type: "STRING" }
+                        },
+                        required: ["translatedBubbles", "newTerms"]
+                    }
+                }
+            };
+
+            const data = await fetchWithBackoff(model, payload);
+            const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            let parsedResult = JSON.parse(rawJson);
+            let transArray = parsedResult.translatedBubbles || [];
+            let cleanedTranslation = transArray.map(bubble => bubble.replace(/[၁။]/g, ' ').trim()).join('\n\n');
+            return { translation: cleanedTranslation, newTerms: parsedResult.newTerms || "NONE" };
+        }
+
+        el.typesetBtn.onclick = async () => {
+            const finalBurmeseText = el.translationArea.value.trim();
+            if (!finalBurmeseText) return;
+            if (queue.length === 0) {
+                showToast("[Warning] No source images in workspace payload.");
+                return;
+            }
+
+            isProcessing = true;
+            el.overlay.classList.remove('hidden');
+            el.progressText.textContent = "TYPESETTING_LAYOUTS";
+            el.chunkText.textContent = "> Executing Client-Side Canvas Engine...";
+
+            try {
+                const burmeseLines = finalBurmeseText.split('\n\n').filter(l => l.trim().length > 0);
+
+                for (let i = 0; i < queue.length; i++) {
+                    const item = queue[i];
+                    const pageBubbles = speechBubbleCoordinates.filter(b => b.pageIndex === i);
+                    
+                    await new Promise((resolve) => {
+                        const img = new Image();
+                        img.src = item.url;
+                        img.onload = () => {
+                            let origWidth = img.width;
+                            let scale = origWidth > MAX_WIDTH ? MAX_WIDTH / origWidth : 1;
+                            
+                            const canvas = document.createElement('canvas');
+                            canvas.width = origWidth * scale;
+                            canvas.height = img.height * scale;
+                            const ctx = canvas.getContext('2d');
+                            
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            pageBubbles.forEach((bubble, idx) => {
+                                const currentText = burmeseLines[idx] || bubble.text;
+                                let [ymin, xmin, ymax, xmax] = bubble.box;
+
+                                let w = xmax - xmin;
+                                let h = ymax - ymin;
+                                
+                                ctx.fillStyle = "#FFFFFF";
+                                ctx.beginPath();
+                                ctx.ellipse(xmin + w/2, ymin + h/2, w/2 + 4, h/2 + 4, 0, 0, 2 * Math.PI);
+                                ctx.fill();
+
+                                ctx.fillStyle = "#000000";
+                                let fontSize = Math.max(12, Math.min(w / 6, 22));
+                                ctx.font = `bold ${fontSize}px 'Padauk', sans-serif`;
+                                ctx.textAlign = "center";
+                                ctx.textBaseline = "middle";
+
+                                wrapText(ctx, currentText, xmin + w/2, ymin + h/2, w - 10, fontSize + 4);
+                            });
+
+                            canvas.toBlob((blob) => {
+                                const newUrl = URL.createObjectURL(blob);
+                                URL.revokeObjectURL(item.url);
+                                item.url = newUrl;
+                                resolve();
+                            }, 'image/jpeg', 0.9);
+                        };
+                    });
+                }
+
+                renderImageViewer();
+                showToast("[Success] Canvas Typesetter sequence complete!");
+                el.tabImg.click();
+
+            } catch (err) {
+                console.error("Typesetting Fault:", err);
+                showToast("[Error] Typesetting process encountered a layout error.");
+            } finally {
+                isProcessing = false;
+                el.overlay.classList.add('hidden');
+            }
+        };
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0];
+
+            for (let n = 1; n < words.length; n++) {
+                let testLine = currentLine + ' ' + words[n];
+                let metrics = context.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    lines.push(currentLine);
+                    currentLine = words[n];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+
+            let startY = y - ((lines.length - 1) * lineHeight) / 2;
+            for (let k = 0; k < lines.length; k++) {
+                context.fillText(lines[k], x, startY + (k * lineHeight));
+            }
+        }
+
+        el.downloadBtn.onclick = () => {
+            const text = el.translationArea.value.trim();
+            if (!text) {
+                showToast("[Warning] Output buffer is empty.");
+                return;
+            }
+            let filename = el.filenameInput.value.trim();
+            if (filename === "") filename = "Translated_Chapter";
+            if (!filename.toLowerCase().endsWith(".txt")) filename += ".txt";
+            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("[System] File saved to local drive.");
+        };
+
+        function copy(text, msg) {
+            const ta = document.createElement("textarea");
+            ta.value = text; document.body.appendChild(ta);
+            ta.select(); document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(msg);
+        }
+
+        el.copyBtn.onclick = () => copy(el.resultArea.value, "[System] RAW text copied to clipboard.");
+        el.copyTransBtn.onclick = () => copy(el.translationArea.value, "[System] MYANMAR text copied to clipboard.");
+
+        function showToast(msg) {
+            el.toast.textContent = msg;
+            el.toast.classList.remove('translate-y-32');
+            el.toast.classList.add('translate-y-0');
+            setTimeout(() => {
+                el.toast.classList.remove('translate-y-0');
+                el.toast.classList.add('translate-y-32');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
