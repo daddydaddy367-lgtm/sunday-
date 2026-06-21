@@ -144,10 +144,10 @@
         
         <section id="sidebar" class="hidden lg:flex w-[200px] absolute lg:relative z-40 h-[calc(100vh-50px)] lg:h-auto lg:w-80 p-2 lg:p-4 flex-col gap-2 lg:gap-4 border-r border-zinc-800 shrink-0 bg-[#050505] overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
             
-            <!-- FIXED: Input is completely outside the clickable dropZone area to prevent event bubbling blocks -->
-            <div id="dropZone" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
-                <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors"><span class="text-red-600">></span> upload_images.sh</p>
-            </div>
+            <!-- FIXED: Native label element automatically forces window upload trigger without bugging event loops -->
+            <label id="dropZone" for="fileInput" class="h-16 lg:h-20 shrink-0 ide-panel flex flex-col items-center justify-center cursor-pointer group">
+                <p class="text-[10px] lg:text-xs text-zinc-400 group-hover:text-red-500 transition-colors select-none"><span class="text-red-600">></span> upload_images.sh</p>
+            </label>
             <input type="file" id="fileInput" class="hidden" accept="image/*" multiple>
 
             <div class="flex flex-col gap-1 shrink-0">
@@ -177,11 +177,19 @@
                 </button>
             </div>
 
+            <!-- RESTORED: Matches your exact layout specifications for models -->
             <div class="pt-2 shrink-0">
-                <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL</label>
+                <label class="block text-[9px] uppercase text-zinc-500 mb-1">AI MODEL (PRO NEEDS CUSTOM KEY)</label>
                 <select id="modelSelect" class="w-full p-2 text-[10px] lg:text-xs">
-                    <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash Preview</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 3.5 Pro (Ultimate Quality)</option>
                 </select>
+            </div>
+
+            <!-- RESTORED: Custom environment target configuration -->
+            <div class="pt-2 shrink-0">
+                <label class="block text-[9px] uppercase text-zinc-500 mb-1">ENV_VAR: GEMINI_API_KEY</label>
+                <input type="password" id="apiKeyInput" class="w-full p-2 text-[10px] lg:text-xs" placeholder="[Environment Provided]">
             </div>
 
             <div class="mt-2 shrink-0 border border-zinc-800 p-2 bg-[#0a0a0a]">
@@ -246,7 +254,6 @@
     <div id="toast" class="fixed bottom-4 right-4 translate-y-32 transition-all duration-300 bg-black text-red-500 px-4 py-2 lg:px-6 lg:py-3 border border-red-900 shadow-2xl z-[100] text-[10px] lg:text-xs shadow-[0_0_15px_rgba(220,38,38,0.2)] whitespace-nowrap"></div>
 
     <script>
-        const apiKey = "YOUR_GEMINI_API_KEY_HERE"; 
         const MAX_STRIP_HEIGHT = 2000; 
         const MAX_WIDTH = 1200; 
         let queue = [];
@@ -279,6 +286,7 @@
             clearAll: document.getElementById('clearAll'),
             toast: document.getElementById('toast'),
             modelSelect: document.getElementById('modelSelect'),
+            apiKeyInput: document.getElementById('apiKeyInput'),
             rpmCount: document.getElementById('rpmCount'),
             rpmBar: document.getElementById('rpmBar')
         };
@@ -300,6 +308,11 @@
             el.modelSelect.value = localStorage.getItem('sundayComicModel');
         }
         el.modelSelect.addEventListener('change', (e) => localStorage.setItem('sundayComicModel', e.target.value));
+
+        if (localStorage.getItem('sundayApiKey')) {
+            el.apiKeyInput.value = localStorage.getItem('sundayApiKey');
+        }
+        el.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('sundayApiKey', e.target.value));
 
         el.resultArea.value = localStorage.getItem('sundayComicRawText') || '';
         el.translationArea.value = localStorage.getItem('sundayComicTransText') || '';
@@ -331,11 +344,7 @@
             el.copyBtn.classList.remove('hidden'); 
         };
 
-        // FIXED UPLOAD HANDLERS (No event looping, includes complete Drag & Drop support)
-        el.dropZone.onclick = () => {
-            el.fileInput.click();
-        };
-
+        // FIXED UPLOAD ENGINE: Supports drag-drop tracking and automatic file matching setups
         el.fileInput.onchange = (e) => {
             if (e.target.files.length > 0) {
                 addFiles(Array.from(e.target.files));
@@ -457,6 +466,10 @@
         setInterval(updateApiUsage, 1000);
 
         async function fetchWithBackoff(model, payload) {
+            const apiKey = el.apiKeyInput.value.trim();
+            if(!apiKey) {
+                throw new Error("Missing Gemini API Key. Please provide one in the console sidebar configuration element.");
+            }
             const delays = [1000, 2000, 4000, 8000, 16000];
             for (let i = 0; i < 6; i++) {
                 try {
@@ -502,6 +515,7 @@
                 } catch (err) {
                     console.error("OCR Error:", err);
                     item.status = 'error';
+                    showToast(`[Error] OCR Failed: ${err.message || err}`);
                 }
                 renderQueue();
                 el.resultArea.scrollTop = el.resultArea.scrollHeight;
@@ -552,7 +566,7 @@
         }
 
         async function callGeminiOCR(base64, pageIndex, chunkIndex, chunkHeight, canvasWidth) {
-            const model = el.modelSelect.value || 'gemini-2.5-flash-preview-09-2025';
+            const model = el.modelSelect.value || 'gemini-2.5-flash';
             const prompt = `Perform highly accurate OCR on this manga/comic layout. Return a JSON object containing an array called "bubbles". Each bubble element MUST be an object containing "text" (the transcription string) and "box" [ymin, xmin, ymax, xmax] coordinates localized inside the panel space (normalized 0-1000 bounds). Maintain strict reading sequence orders.`;
             const payload = {
                 contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
@@ -637,7 +651,7 @@
                 }
             } catch (err) {
                 console.error("Translation Error:", err);
-                showToast("[Error] Compilation failed.");
+                showToast(`[Error] Compilation failed: ${err.message || err}`);
             } finally {
                 isProcessing = false;
                 el.overlay.classList.add('hidden');
@@ -645,7 +659,7 @@
         };
 
         async function callGeminiTranslate(inputArray) {
-            const model = el.modelSelect.value || 'gemini-2.5-flash-preview-09-2025';
+            const model = el.modelSelect.value || 'gemini-2.5-flash';
             const currentGlossary = el.glossaryArea.value.trim();
             const glossaryInstruction = currentGlossary ? `\nMANDATORY GLOSSARY:\n${currentGlossary}` : "";
             const systemPrompt = `You are an elite Manga Localizer. Translate from English to natural, fluid Myanmar (Burmese). Map strictly 1-to-1 inside the array fields.${glossaryInstruction}`;
@@ -674,7 +688,7 @@
             return { translation: cleanedTranslation, newTerms: parsedResult.newTerms || "NONE" };
         }
 
-        // FIXED TYPESETTER ENGINE (Bypasses GitHub hosting cross-origin Canvas protection walls)
+        // TYPESETTER ENGINE: Pure sandbox-proof client reader engine setup
         el.typesetBtn.onclick = async () => {
             const finalBurmeseText = el.translationArea.value.trim();
             if (!finalBurmeseText) return;
@@ -758,7 +772,7 @@
 
             } catch (err) {
                 console.error("Typesetting Fault:", err);
-                showToast("[Error] Typesetting process encountered a security layout error.");
+                showToast("[Error] Typesetting process encountered an image layout processing error.");
             } finally {
                 isProcessing = false;
                 el.overlay.classList.add('hidden');
