@@ -20,18 +20,17 @@
             <button class="code-btn" id="transBtn">3. TRANSLATE</button>
             <button class="code-btn" id="typesetBtn">4. TYPESET</button>
         </div>
-        
         <div class="flex-1">
-            <div id="imageViewer" class="ide-panel min-h-[500px] flex items-center justify-center border border-zinc-700">
-                <p class="text-zinc-600">No image loaded</p>
-            </div>
+            <div id="imageViewer" class="ide-panel min-h-[500px] flex items-center justify-center border border-zinc-700"></div>
             <textarea id="resultArea" class="w-full h-32 bg-[#050505] border border-zinc-700 mt-2 p-2 text-xs" placeholder="JSON output..."></textarea>
         </div>
     </div>
 
     <script>
+        const API_KEY = "AQ.Ab8RN6KTTq9OYSVVM95cagneaZ-VwrNXsktjhxs9R67TVs2YFA";
+        const API_URL = https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY};
+
         const fileInput = document.getElementById('fileInput');
-        const imageViewer = document.getElementById('imageViewer');
         const resultArea = document.getElementById('resultArea');
 
         document.getElementById('uploadBtn').onclick = () => fileInput.click();
@@ -46,8 +45,8 @@
                     canvas.width = img.naturalWidth;
                     canvas.height = img.naturalHeight;
                     canvas.getContext('2d').drawImage(img, 0, 0);
-                    imageViewer.innerHTML = '';
-                    imageViewer.appendChild(canvas);
+                    document.getElementById('imageViewer').innerHTML = '';
+                    document.getElementById('imageViewer').appendChild(canvas);
                 };
                 img.src = ev.target.result;
             };
@@ -56,68 +55,50 @@
 
         document.getElementById('ocrBtn').onclick = async () => {
             const canvas = document.getElementById('mainCanvas');
-            if (!canvas) return;
-            const imageData = canvas.toDataURL('image/jpeg');
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6KTTq9OYSVVM95cagneaZ-VwrNXsktjhxs9R67TVs2YFA', {
+            const data = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Extract text and coordinates from this image in JSON format" }, { inline_data: { mime_type: "image/jpeg", data: imageData.split(',')[1] } }] }] })
-            });
-            const result = await response.json();
-            resultArea.value = result.candidates[0].content.parts[0].text;
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Extract text and coordinates in JSON: {coordinates: [{x,y,w,h}], text: []}" }, { inline_data: { mime_type: "image/jpeg", data: canvas.toDataURL('image/jpeg').split(',')[1] } }] }] })
+            }).then(r => r.json());
+            resultArea.value = data.candidates[0].content.parts[0].text.replace(/`json|```/g, '');
         };
 
         document.getElementById('transBtn').onclick = async () => {
-            try {
-                const data = JSON.parse(resultArea.value);
-                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6KTTq9OYSVVM95cagneaZ-VwrNXsktjhxs9R67TVs2YFA', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Translate this list of bubbles to Burmese and return in the same JSON format: " + JSON.stringify(data.translatedBubbles) }] }] })
-                });
-                const result = await response.json();
-                data.translatedBubbles = JSON.parse(result.candidates[0].content.parts[0].text);
-                resultArea.value = JSON.stringify(data, null, 2);
-            } catch (err) {
-                alert("Translation/JSON Error: " + err.message);
-            }
+            const currentData = JSON.parse(resultArea.value);
+            const data = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Translate this list to Burmese: " + JSON.stringify(currentData.text) + ". Return ONLY the translated list." }] }] })
+            }).then(r => r.json());
+            currentData.translatedText = JSON.parse(data.candidates[0].content.parts[0].text);
+            resultArea.value = JSON.stringify(currentData, null, 2);
         };
 
         document.getElementById('typesetBtn').onclick = () => {
             const canvas = document.getElementById('mainCanvas');
-            if (!canvas) return;
             const ctx = canvas.getContext('2d');
+            const data = JSON.parse(resultArea.value);
             
-            try {
-                const data = JSON.parse(resultArea.value);
-                
-                const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
-                    let words = text.split(' ');
-                    let line = '';
-                    for(let n = 0; n < words.length; n++) {
-                        let testLine = line + words[n] + ' ';
-                        let metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxWidth && n > 0) {
-                            ctx.fillText(line, x, y);
-                            line = words[n] + ' ';
-                            y += lineHeight;
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    ctx.fillText(line, x, y);
-                };
+            const wrapText = (text, x, y, maxWidth, lineHeight) => {
+                let words = text.split(' '), line = '', lineY = y;
+                for(let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n] + ' ';
+                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                        ctx.fillText(line, x, lineY);
+                        line = words[n] + ' ';
+                        lineY += lineHeight;
+                    } else { line = testLine; }
+                }
+                ctx.fillText(line, x, lineY);
+            };
 
-                data.coordinates.forEach((box, i) => {
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(box.x, box.y, box.w, box.h);
-                    ctx.fillStyle = "black";
-                    ctx.font = "20px 'Padauk'";
-                    wrapText(ctx, data.translatedBubbles[i], box.x + 5, box.y + 25, box.w - 10, 25);
-                });
-            } catch (e) {
-                alert("Typeset/JSON Error: " + e.message);
-            }
+            data.coordinates.forEach((box, i) => {
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(box.x, box.y, box.w, box.h);
+                ctx.fillStyle = "black";
+                ctx.font = "20px 'Padauk'";
+                wrapText(data.translatedText[i], box.x + 5, box.y + 25, box.w - 10, 25);
+            });
         };
     </script>
 </body>
