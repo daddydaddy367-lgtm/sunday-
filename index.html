@@ -3,103 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunday_Compiler // Thu Thu Edition</title>
+    <title>Sunday Compiler // Full Pipeline</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Padauk:wght@400;700&display=swap');
-        :root { --term-black: #000000; --term-gray: #0a0a0a; --term-border: #3f3f46; --term-red: #dc2626; --term-red-glow: rgba(220, 38, 38, 0.2); --term-text: #e4e4e7; }
-        body { font-family: 'Fira Code', monospace; background-color: var(--term-black); color: var(--term-text); }
-        .myanmar-text { font-family: 'Padauk', sans-serif; line-height: 1.8; font-size: 0.85rem;}
-        .ide-panel { background: var(--term-gray); border: 1px solid var(--term-border); }
-        .code-btn { background: transparent; color: var(--term-red); border: 1px solid var(--term-red); font-weight: 600; text-transform: uppercase; transition: all 0.2s; }
-        .code-btn:hover:not(:disabled) { background: var(--term-red); color: var(--term-black); }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; }
-        .loader { border: 2px solid #18181b; border-top: 2px solid var(--term-red); width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        #canvasContainer { border: 2px solid #333; display: inline-block; cursor: crosshair; }
+        .panel { background: #111; padding: 15px; border-radius: 8px; }
+        button { background: #dc2626; color: white; padding: 10px 20px; width: 100%; margin-bottom: 10px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
-
-    <header class="p-2 border-b border-zinc-800 bg-black flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <span class="text-red-600 font-bold">~</span>
-            <span class="text-zinc-300 text-sm">THU_THU / sunday_compiler</span>
+<body class="p-6">
+    <div class="flex gap-6">
+        <div class="w-72 panel">
+            <h2 class="text-red-500 font-bold mb-4">SYSTEM CONTROLS</h2>
+            <input type="file" id="fileInput" class="hidden" accept="image/*">
+            <button onclick="document.getElementById('fileInput').click()">1. UPLOAD IMAGE</button>
+            <button onclick="runOCR()">2. RUN OCR</button>
+            <button onclick="runTranslate()">3. RUN TRANSLATE</button>
+            <button onclick="runTypeset()">4. FINAL TYPESET</button>
         </div>
-    </header>
-
-    <main class="flex-1 flex overflow-hidden">
-        <section id="sidebar" class="w-80 p-4 flex flex-col gap-4 border-r border-zinc-800 bg-[#050505]">
-            <div id="dropZone" class="h-20 ide-panel flex flex-col items-center justify-center cursor-pointer">
-                <p class="text-xs text-zinc-400">upload.sh</p>
-                <input type="file" id="fileInput" class="hidden" accept="image/*" multiple>
-            </div>
-            
-            <div class="flex flex-col gap-2">
-                <button id="startBtn" class="code-btn py-2 text-xs" disabled>./run_ocr.sh</button>
-                <button id="translateBtn" class="code-btn py-2 text-xs" disabled>./compile_myanmar.sh</button>
-                <button id="typesetBtn" class="code-btn py-2 text-xs" onclick="runTypesetProcess()">./typeset.sh</button>
-            </div>
-        </section>
-
-        <section class="flex-1 p-4 flex flex-col gap-4 bg-black">
-            <div class="flex-1 flex gap-4 overflow-hidden">
-                <textarea id="resultArea" class="w-1/2 p-4 text-xs bg-[#050505] border border-zinc-800" placeholder="> OCR Result..."></textarea>
-                <textarea id="translationArea" class="w-1/2 p-4 text-xs bg-[#050505] border border-zinc-800" placeholder="> Myanmar Translation..."></textarea>
-            </div>
-        </section>
-    </main>
-
-    <div id="processingOverlay" class="hidden absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50">
-        <div class="loader"></div>
-        <p class="text-red-500 mt-2">PROCESSING...</p>
+        
+        <div class="flex-1">
+            <div id="canvasContainer"><canvas id="mainCanvas"></canvas></div>
+            <textarea id="resultArea" class="w-full h-40 bg-gray-900 mt-4 p-4 text-sm" placeholder="Paste your OCR/Translate JSON here..."></textarea>
+        </div>
     </div>
 
     <script>
-        // --- Typesetting System Logic ---
-        async function runTypesetProcess() {
-            const resultArea = document.getElementById('resultArea');
-            if (!resultArea.value) { alert("JSON data မရှိပါ"); return; }
-            
-            try {
-                const jsonData = JSON.parse(resultArea.value);
-                // Canvas နေရာသတ်မှတ်ခြင်း (ပုံအပေါ်တွင် တင်ရန်)
-                const canvas = document.querySelector('canvas') || document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                jsonData.coordinates.forEach((box, index) => {
-                    const translatedText = jsonData.translatedBubbles[index];
-                    // ၁။ အင်္ဂလိပ်စာ ဖုံးခြင်း
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(box.x, box.y, box.w, box.h);
-                    // ၂။ မြန်မာစာ ထည့်ခြင်း
-                    ctx.fillStyle = "black";
-                    ctx.font = "16px 'Padauk'";
-                    wrapText(ctx, translatedText, box.x, box.y, box.w, 20);
-                });
-                alert("Typesetting ပြီးဆုံးပါပြီ");
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+
+        // 1. Upload
+        fileInput.onchange = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = URL.createObjectURL(e.target.files[0]);
+        };
+
+        // 2. OCR (Placeholder: ဒီနေရာမှာ မင်းရဲ့ API Logic ထည့်ပါ)
+        function runOCR() {
+            alert("API ချိတ်ဆက်ရန် လိုအပ်သည်");
         }
 
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        // 3. Translate (Placeholder: ဒီနေရာမှာ မင်းရဲ့ API Logic ထည့်ပါ)
+        function runTranslate() {
+            alert("API ချိတ်ဆက်ရန် လိုအပ်သည်");
+        }
+
+        // 4. Final Typeset (မင်းလိုချင်တဲ့ Clipping Logic)
+        function runTypeset() {
+            const raw = document.getElementById('resultArea').value;
+            if(!raw) return alert("JSON မရှိပါ");
+            const data = JSON.parse(raw);
+
+            // ပုံကို ပြန် Reset လုပ်ပြီးမှ စာတင်ခြင်း
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+                data.coordinates.forEach((box, i) => {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.rect(box.x, box.y, box.w, box.h); // Clipping
+                    ctx.clip();
+                    
+                    ctx.fillStyle = "#FFFFFF"; 
+                    ctx.fillRect(box.x, box.y, box.w, box.h);
+                    
+                    ctx.fillStyle = "black";
+                    ctx.font = "bold 24px 'Padauk'";
+                    wrapText(ctx, data.translatedBubbles[i], box.x, box.y, box.w, 30);
+                    ctx.restore();
+                });
+            };
+            img.src = canvas.toDataURL();
+        }
+
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const words = text.split(' ');
             let line = '';
             for(let i = 0; i < words.length; i++) {
                 let testLine = line + words[i] + ' ';
-                let metrics = context.measureText(testLine);
-                if (metrics.width > maxWidth && i > 0) {
-                    context.fillText(line, x, y);
+                if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+                    ctx.fillText(line, x, y);
                     line = words[i] + ' ';
                     y += lineHeight;
                 } else {
                     line = testLine;
                 }
             }
-            context.fillText(line, x, y);
+            ctx.fillText(line, x, y);
         }
-        // --- End of Typesetting ---
     </script>
 </body>
 </html>
