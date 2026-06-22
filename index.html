@@ -1,77 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunday Compiler // Full Pipeline</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #000; color: #fff; font-family: sans-serif; }
-        #canvasContainer { border: 2px solid #333; display: inline-block; cursor: crosshair; }
-        .panel { background: #111; padding: 15px; border-radius: 8px; }
-        button { background: #dc2626; color: white; padding: 10px 20px; width: 100%; margin-bottom: 10px; border-radius: 4px; font-weight: bold; }
-    </style>
-</head>
-<body class="p-6">
-    <div class="flex gap-6">
-        <div class="w-72 panel">
-            <h2 class="text-red-500 font-bold mb-4">SYSTEM CONTROLS</h2>
-            <input type="file" id="fileInput" class="hidden" accept="image/*">
-            <button onclick="document.getElementById('fileInput').click()">1. UPLOAD IMAGE</button>
-            <button onclick="runOCR()">2. RUN OCR</button>
-            <button onclick="runTranslate()">3. RUN TRANSLATE</button>
-            <button onclick="runTypeset()">4. FINAL TYPESET</button>
-        </div>
-        
-        <div class="flex-1">
-            <div id="canvasContainer"><canvas id="mainCanvas"></canvas></div>
-            <textarea id="resultArea" class="w-full h-40 bg-gray-900 mt-4 p-4 text-sm" placeholder="Paste your OCR/Translate JSON here..."></textarea>
-        </div>
-    </div>
+// --- [အရေးကြီး] ---
+// မင်းရဲ့ လက်ရှိ Script အောက်ဆုံးမှာ ဒီ Function တွေကို ထည့်လိုက်ပါ။ 
+// အရင်က ရှိပြီးသား script တွေကို ဒီအသစ်တွေနဲ့ ပြန်အစားထိုးလိုက်ပါ။
 
-    <script>
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
-        const fileInput = document.getElementById('fileInput');
-
-        // 1. Upload
-        fileInput.onchange = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-            };
-            img.src = URL.createObjectURL(e.target.files[0]);
-        };
-
-        // 2. OCR (Placeholder: ဒီနေရာမှာ မင်းရဲ့ API Logic ထည့်ပါ)
-        function runOCR() {
-            alert("API ချိတ်ဆက်ရန် လိုအပ်သည်");
+        function renderImageViewer() {
+            el.imageViewer.innerHTML = '';
+            queue.forEach(item => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "w-full border border-zinc-800 p-1 bg-black";
+                const img = document.createElement('img');
+                img.src = item.url;
+                img.className = "w-full";
+                wrapper.appendChild(img);
+                el.imageViewer.appendChild(wrapper);
+            });
         }
 
-        // 3. Translate (Placeholder: ဒီနေရာမှာ မင်းရဲ့ API Logic ထည့်ပါ)
-        function runTranslate() {
-            alert("API ချိတ်ဆက်ရန် လိုအပ်သည်");
-        }
+        // --- Typesetting System (မင်းလိုချင်တဲ့ Canvas Clipping Logic) ---
+        async function runTypeset(jsonString) {
+            const data = JSON.parse(jsonString);
+            const viewer = el.imageViewer;
+            viewer.innerHTML = ''; // Viewer ကို ရှင်းမယ်
 
-        // 4. Final Typeset (မင်းလိုချင်တဲ့ Clipping Logic)
-        function runTypeset() {
-            const raw = document.getElementById('resultArea').value;
-            if(!raw) return alert("JSON မရှိပါ");
-            const data = JSON.parse(raw);
+            for(let item of queue) {
+                const img = new Image();
+                img.src = item.url;
+                await img.decode();
 
-            // ပုံကို ပြန် Reset လုပ်ပြီးမှ စာတင်ခြင်း
-            const img = new Image();
-            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
+
+                // Clipping logic
                 data.coordinates.forEach((box, i) => {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.rect(box.x, box.y, box.w, box.h); // Clipping
-                    ctx.clip();
-                    
-                    ctx.fillStyle = "#FFFFFF"; 
+                    ctx.rect(box.x, box.y, box.w, box.h);
+                    ctx.clip(); // Bubble အတွင်းမှာပဲ ဆွဲမယ်
+
+                    ctx.fillStyle = "#FFFFFF";
                     ctx.fillRect(box.x, box.y, box.w, box.h);
                     
                     ctx.fillStyle = "black";
@@ -79,8 +47,8 @@
                     wrapText(ctx, data.translatedBubbles[i], box.x, box.y, box.w, 30);
                     ctx.restore();
                 });
-            };
-            img.src = canvas.toDataURL();
+                viewer.appendChild(canvas);
+            }
         }
 
         function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -98,6 +66,3 @@
             }
             ctx.fillText(line, x, y);
         }
-    </script>
-</body>
-</html>
