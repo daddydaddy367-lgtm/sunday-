@@ -1,68 +1,66 @@
-// --- [အရေးကြီး] ---
-// မင်းရဲ့ လက်ရှိ Script အောက်ဆုံးမှာ ဒီ Function တွေကို ထည့်လိုက်ပါ။ 
-// အရင်က ရှိပြီးသား script တွေကို ဒီအသစ်တွေနဲ့ ပြန်အစားထိုးလိုက်ပါ။
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sunday_Compiler // Fixed Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; }
+        .ide-panel { background: #0a0a0a; border: 1px solid #3f3f46; }
+        .code-btn { background: #dc2626; color: white; padding: 10px; width: 100%; margin-bottom: 10px; cursor: pointer; border: none; }
+    </style>
+</head>
+<body class="p-6">
+    <div class="flex gap-6">
+        <div class="w-72 ide-panel p-4">
+            <input type="file" id="fileInput" class="hidden">
+            <button class="code-btn" id="uploadBtn">1. UPLOAD</button>
+            <button class="code-btn" id="typesetBtn">4. TYPESET</button>
+        </div>
+        <div class="flex-1">
+            <div id="imageViewer" class="ide-panel p-4 min-h-[400px]"></div>
+            <textarea id="resultArea" class="w-full h-40 bg-gray-900 mt-4 p-2 text-white" placeholder="Paste JSON here..."></textarea>
+        </div>
+    </div>
 
-        function renderImageViewer() {
-            el.imageViewer.innerHTML = '';
-            queue.forEach(item => {
-                const wrapper = document.createElement('div');
-                wrapper.className = "w-full border border-zinc-800 p-1 bg-black";
-                const img = document.createElement('img');
-                img.src = item.url;
-                img.className = "w-full";
-                wrapper.appendChild(img);
-                el.imageViewer.appendChild(wrapper);
+    <script>
+        const imageViewer = document.getElementById('imageViewer');
+        const fileInput = document.getElementById('fileInput');
+
+        document.getElementById('uploadBtn').onclick = () => fileInput.click();
+        
+        fileInput.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                imageViewer.innerHTML = <img id="previewImg" src="${ev.target.result}" class="max-w-full">;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        document.getElementById('typesetBtn').onclick = () => {
+            const img = document.getElementById('previewImg');
+            const data = JSON.parse(document.getElementById('resultArea').value);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            data.coordinates.forEach((box, i) => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(box.x, box.y, box.w, box.h);
+                ctx.clip();
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(box.x, box.y, box.w, box.h);
+                ctx.fillStyle = "black";
+                ctx.font = "bold 24px sans-serif";
+                ctx.fillText(data.translatedBubbles[i], box.x, box.y + 25);
+                ctx.restore();
             });
-        }
-
-        // --- Typesetting System (မင်းလိုချင်တဲ့ Canvas Clipping Logic) ---
-        async function runTypeset(jsonString) {
-            const data = JSON.parse(jsonString);
-            const viewer = el.imageViewer;
-            viewer.innerHTML = ''; // Viewer ကို ရှင်းမယ်
-
-            for(let item of queue) {
-                const img = new Image();
-                img.src = item.url;
-                await img.decode();
-
-                const canvas = document.createElement('canvas');
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-
-                // Clipping logic
-                data.coordinates.forEach((box, i) => {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(box.x, box.y, box.w, box.h);
-                    ctx.clip(); // Bubble အတွင်းမှာပဲ ဆွဲမယ်
-
-                    ctx.fillStyle = "#FFFFFF";
-                    ctx.fillRect(box.x, box.y, box.w, box.h);
-                    
-                    ctx.fillStyle = "black";
-                    ctx.font = "bold 24px 'Padauk'";
-                    wrapText(ctx, data.translatedBubbles[i], box.x, box.y, box.w, 30);
-                    ctx.restore();
-                });
-                viewer.appendChild(canvas);
-            }
-        }
-
-        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
-            let line = '';
-            for(let i = 0; i < words.length; i++) {
-                let testLine = line + words[i] + ' ';
-                if (ctx.measureText(testLine).width > maxWidth && i > 0) {
-                    ctx.fillText(line, x, y);
-                    line = words[i] + ' ';
-                    y += lineHeight;
-                } else {
-                    line = testLine;
-                }
-            }
-            ctx.fillText(line, x, y);
-        }
+            imageViewer.innerHTML = '';
+            imageViewer.appendChild(canvas);
+        };
+    </script>
+</body>
+</html>
