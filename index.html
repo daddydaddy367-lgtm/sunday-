@@ -1,105 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
     <meta charset="UTF-8">
-    <title>Sunday_Compiler</title>
+    <title>Sunday Compiler Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #000; color: #fff; font-family: monospace; }
-        .ide-panel { background: #0a0a0a; border: 1px solid #3f3f46; }
-        .code-btn { border: 1px solid #dc2626; color: #dc2626; padding: 10px; width: 100%; margin-bottom: 10px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
-        .code-btn:hover { background: #dc2626; color: #fff; }
-    </style>
 </head>
-<body class="p-4">
-    <div class="flex gap-4">
-        <div class="w-64 flex flex-col gap-2">
+<body class="bg-black text-white p-6">
+    <div class="flex gap-6">
+        <div class="w-72 flex flex-col gap-3">
             <input type="file" id="fileInput" class="hidden">
-            <button class="code-btn" id="uploadBtn">1. UPLOAD</button>
-            <button class="code-btn" id="ocrBtn">2. RUN OCR</button>
-            <button class="code-btn" id="transBtn">3. TRANSLATE</button>
-            <button class="code-btn" id="typesetBtn">4. TYPESET</button>
+            <button class="bg-red-700 p-3 w-full font-bold uppercase hover:bg-red-600" onclick="document.getElementById('fileInput').click()">1. Upload</button>
+            <button class="bg-red-700 p-3 w-full font-bold uppercase hover:bg-red-600" id="ocrBtn">2. Run OCR</button>
+            <button class="bg-red-700 p-3 w-full font-bold uppercase hover:bg-red-600" id="transBtn">3. Translate</button>
+            <button class="bg-red-700 p-3 w-full font-bold uppercase hover:bg-red-600" id="typeBtn">4. Typeset</button>
         </div>
         <div class="flex-1">
-            <div id="imageViewer" class="ide-panel min-h-[500px] flex items-center justify-center border border-zinc-700"></div>
-            <textarea id="resultArea" class="w-full h-32 bg-[#050505] border border-zinc-700 mt-2 p-2 text-xs" placeholder="JSON output..."></textarea>
+            <div id="canvasContainer" class="border border-zinc-600 min-h-[500px] flex items-center justify-center"></div>
+            <textarea id="resultArea" class="w-full h-40 mt-4 bg-zinc-900 p-4 border border-zinc-600 text-sm font-mono"></textarea>
         </div>
     </div>
 
     <script>
         const API_KEY = "AQ.Ab8RN6KTTq9OYSVVM95cagneaZ-VwrNXsktjhxs9R67TVs2YFA";
-        const API_URL = https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY};
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        const resArea = document.getElementById('resultArea');
 
-        const fileInput = document.getElementById('fileInput');
-        const resultArea = document.getElementById('resultArea');
-
-        document.getElementById('uploadBtn').onclick = () => fileInput.click();
-
-        fileInput.onchange = (e) => {
+        // ပုံတင်ခြင်း
+        document.getElementById('fileInput').onchange = (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     canvas.id = 'mainCanvas';
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
                     canvas.getContext('2d').drawImage(img, 0, 0);
-                    document.getElementById('imageViewer').innerHTML = '';
-                    document.getElementById('imageViewer').appendChild(canvas);
+                    document.getElementById('canvasContainer').innerHTML = '';
+                    document.getElementById('canvasContainer').appendChild(canvas);
                 };
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(e.target.files[0]);
         };
 
+        // OCR ဆွဲထုတ်ခြင်း
         document.getElementById('ocrBtn').onclick = async () => {
             const canvas = document.getElementById('mainCanvas');
             const data = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Extract text and coordinates in JSON: {coordinates: [{x,y,w,h}], text: []}" }, { inline_data: { mime_type: "image/jpeg", data: canvas.toDataURL('image/jpeg').split(',')[1] } }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Extract text and box coordinates {x,y,w,h} as JSON object" }, { inline_data: { mime_type: "image/jpeg", data: canvas.toDataURL('image/jpeg').split(',')[1] } }] }] })
             }).then(r => r.json());
-            resultArea.value = data.candidates[0].content.parts[0].text.replace(/`json|```/g, '');
+            resArea.value = data.candidates[0].content.parts[0].text.replace(/
+json|
         };
 
+        // ဘာသာပြန်ခြင်း
         document.getElementById('transBtn').onclick = async () => {
-            const currentData = JSON.parse(resultArea.value);
-            const data = await fetch(API_URL, {
+            let data = JSON.parse(resArea.value);
+            const trans = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Translate this list to Burmese: " + JSON.stringify(currentData.text) + ". Return ONLY the translated list." }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Translate this list to Burmese, keep order: " + JSON.stringify(data.text) }] }] })
             }).then(r => r.json());
-            currentData.translatedText = JSON.parse(data.candidates[0].content.parts[0].text);
-            resultArea.value = JSON.stringify(currentData, null, 2);
+            data.translated = JSON.parse(trans.candidates[0].content.parts[0].text.replace(/
+json|```/g, '').trim());
+            resArea.value = JSON.stringify(data, null, 2);
         };
 
-        document.getElementById('typesetBtn').onclick = () => {
+        // Typesetting လုပ်ခြင်း
+        document.getElementById('typeBtn').onclick = () => {
             const canvas = document.getElementById('mainCanvas');
             const ctx = canvas.getContext('2d');
-            const data = JSON.parse(resultArea.value);
+            const data = JSON.parse(resArea.value);
             
-            const wrapText = (text, x, y, maxWidth, lineHeight) => {
-                let words = text.split(' '), line = '', lineY = y;
-                for(let n = 0; n < words.length; n++) {
-                    let testLine = line + words[n] + ' ';
-                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-                        ctx.fillText(line, x, lineY);
-                        line = words[n] + ' ';
-                        lineY += lineHeight;
-                    } else { line = testLine; }
-                }
-                ctx.fillText(line, x, lineY);
-            };
-
             data.coordinates.forEach((box, i) => {
-                ctx.fillStyle = "#FFFFFF";
+                ctx.fillStyle = "white";
                 ctx.fillRect(box.x, box.y, box.w, box.h);
                 ctx.fillStyle = "black";
-                ctx.font = "20px 'Padauk'";
-                wrapText(data.translatedText[i], box.x + 5, box.y + 25, box.w - 10, 25);
+                ctx.font = "bold 18px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(data.translated[i] || "", box.x + box.w/2, box.y + box.h/2 + 7);
             });
         };
     </script>
 </body>
 </html>
+
+`
